@@ -120,19 +120,46 @@ export default function App() {
 
       {activeTab === 'editor' ? (
         <div className="flex flex-1 overflow-hidden min-h-0">
-          {/* Left: Upload + Screenshot list */}
+          {/* Left: Upload + Screenshot list + footer */}
           <div
-            className="flex flex-col border-r shrink-0 min-h-0 overflow-hidden"
+            className="flex flex-col border-r shrink-0 min-h-0"
             style={{ width: 260, borderColor: '#1a1a25', background: '#111118' }}
           >
             <UploadZone onUpload={handleUpload} />
-            <ScreenshotList
-              screenshots={screenshots}
-              activeId={activeScreenshotId}
-              onSelect={setActiveScreenshotId}
-              onDelete={handleDeleteScreenshot}
-              onReorder={setScreenshots}
-            />
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <ScreenshotList
+                screenshots={screenshots}
+                activeId={activeScreenshotId}
+                onSelect={setActiveScreenshotId}
+                onDelete={handleDeleteScreenshot}
+                onReorder={setScreenshots}
+              />
+            </div>
+            {/* Version + changelog pinned at bottom of sidebar */}
+            <div
+              className="shrink-0 flex items-center gap-2 px-3 py-2.5"
+              style={{ borderTop: '1px solid #1a1a25' }}
+            >
+              <span style={{ color: '#33334a', fontSize: 11, fontWeight: 500 }}>
+                v{APP_VERSION}
+              </span>
+              <button
+                onClick={() => setShowChangelog(true)}
+                className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #1a1a25',
+                  color: '#55556a',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                }}
+              >
+                <Sparkles size={10} color="#007aff" />
+                Changelog
+              </button>
+            </div>
           </div>
 
           {/* Center: mini strip + main preview */}
@@ -264,37 +291,6 @@ export default function App() {
           />
         </div>
       )}
-
-      {/* Version + changelog — below header; in editor, sit past sidebar so list can’t cover it */}
-      <div
-        className="fixed flex items-center gap-2"
-        style={{
-          bottom: 16,
-          left: activeTab === 'editor' ? 276 : 16,
-          zIndex: 40,
-        }}
-      >
-        <span style={{ color: '#33334a', fontSize: 11, fontWeight: 500 }}>
-          v{APP_VERSION}
-        </span>
-        <button
-          onClick={() => setShowChangelog(true)}
-          className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors"
-          style={{
-            background: 'rgba(10,10,16,0.85)',
-            border: '1px solid #1a1a25',
-            color: '#55556a',
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: 'pointer',
-            backdropFilter: 'blur(8px)',
-            lineHeight: 1,
-          }}
-        >
-          <Sparkles size={10} color="#007aff" />
-          Changelog
-        </button>
-      </div>
 
       {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
     </div>

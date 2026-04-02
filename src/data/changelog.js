@@ -1,10 +1,19 @@
-export const APP_VERSION = '1.2.0'
+export const APP_VERSION = '1.2.1'
 
 /**
  * Each entry: { version, date, tag, changes[] }
  * tag: 'new' | 'fix' | 'improvement'
  */
 export const CHANGELOG = [
+  {
+    version: '1.2.1',
+    date: 'Apr 3, 2026',
+    entries: [
+      { tag: 'new', text: 'Local-only storage warning — friendly ⚠ icon in the header; click to see a reminder that work lives in the browser tab only (no cloud, no sync)' },
+      { tag: 'improvement', text: 'Version & Changelog button moved into the bottom of the left sidebar — no longer floats over the canvas' },
+      { tag: 'fix', text: 'Screenshot list now properly scrolls inside a constrained wrapper so it can never overflow the sidebar' },
+    ],
+  },
   {
     version: '1.2.0',
     date: 'Apr 3, 2026',

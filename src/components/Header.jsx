@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Monitor, Smartphone, Tablet, Download, Eye, Pencil, Loader2 } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Monitor, Smartphone, Tablet, Download, Eye, Pencil, Loader2, AlertTriangle } from 'lucide-react'
 import { exportAllScreenshots } from '../utils/exportUtils'
 
 const DeviceButton = ({ id, label, icon: Icon, active, onClick }) => (
@@ -28,6 +28,19 @@ export default function Header({
   appInfo,
 }) {
   const [exportStatus, setExportStatus] = useState(null)
+  const [showStorageInfo, setShowStorageInfo] = useState(false)
+  const storageRef = useRef(null)
+
+  useEffect(() => {
+    if (!showStorageInfo) return
+    const handler = (e) => {
+      if (storageRef.current && !storageRef.current.contains(e.target)) {
+        setShowStorageInfo(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showStorageInfo])
 
   const handleExportAll = async () => {
     if (screenshots.length === 0) return
@@ -104,6 +117,53 @@ export default function Header({
           {screenshots.length} screenshot{screenshots.length !== 1 ? 's' : ''}
         </span>
       )}
+
+      {/* Local-only storage notice */}
+      <div ref={storageRef} style={{ position: 'relative' }}>
+        <button
+          onClick={() => setShowStorageInfo((v) => !v)}
+          title="Storage info"
+          className="flex items-center justify-center rounded-lg transition-colors"
+          style={{
+            width: 30,
+            height: 30,
+            background: showStorageInfo ? '#1e1e2a' : 'transparent',
+            border: `1px solid ${showStorageInfo ? '#38384a' : '#252535'}`,
+            cursor: 'pointer',
+          }}
+        >
+          <AlertTriangle size={14} color="#7a7a9a" />
+        </button>
+
+        {showStorageInfo && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 68,
+              right: 16,
+              width: 280,
+              background: '#16161f',
+              border: '1px solid #25253a',
+              borderRadius: 10,
+              padding: '12px 14px',
+              zIndex: 9999,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle size={13} color="#7a7a9a" />
+              <span style={{ color: '#a0a0bf', fontSize: 12, fontWeight: 600 }}>No cloud storage</span>
+            </div>
+            <p style={{ color: '#65657a', fontSize: 12, lineHeight: 1.6, margin: 0 }}>
+              Your work only lives in this browser tab — no cloud, no sync, no backup. ✨
+              <br />
+              <span style={{ color: '#8888a8' }}>Refresh = poof, it&apos;s gone.</span>
+              <br />
+              Export early &amp; often to keep your screenshots safe!
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Export button */}
       <button
