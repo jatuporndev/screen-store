@@ -2,6 +2,7 @@ import { PRESET_TEMPLATES } from '../data/templates'
 
 function MiniCard({ template }) {
   const isTop = template.textPosition === 'top'
+  const fullBleed = template.fullBleedMockup === true
 
   const textBlock = (
     <div style={{ padding: '4px 5px', flex: '0 0 auto' }}>
@@ -29,13 +30,17 @@ function MiniCard({ template }) {
   const phoneBlock = (
     <div
       style={{
-        flex: '1 1 0',
-        margin: '0 6px',
+        // Full-bleed: no flex-grow so height doesn’t fight vertical centering; fixed % width + auto margins
+        flex: fullBleed ? '0 0 auto' : '1 1 0',
+        ...(fullBleed ? { width: '86%', maxWidth: '100%' } : {}),
+        boxSizing: 'border-box',
+        margin: fullBleed ? '0 auto' : '0 5px',
+        minHeight: fullBleed ? '68%' : 0,
+        alignSelf: fullBleed ? 'center' : undefined,
         background: '#1a1a1a',
         borderRadius: 5,
         border: '1.5px solid #2a2a2a',
         overflow: 'hidden',
-        minHeight: 0,
       }}
     />
   )
@@ -49,10 +54,16 @@ function MiniCard({ template }) {
         borderRadius: 8,
         display: 'flex',
         flexDirection: 'column',
+        // stretch = phone mockup spans card width; center only for full-bleed (no text chrome)
+        alignItems: fullBleed ? 'center' : 'stretch',
+        justifyContent: fullBleed ? 'center' : undefined,
         overflow: 'hidden',
+        padding: fullBleed ? '3px' : 0,
       }}
     >
-      {isTop ? (
+      {fullBleed ? (
+        phoneBlock
+      ) : isTop ? (
         <>
           {textBlock}
           {phoneBlock}

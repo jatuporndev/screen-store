@@ -4,7 +4,7 @@ export default function ScreenshotList({ screenshots, activeId, onSelect, onDele
   if (screenshots.length === 0) return null
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 pb-3">
+    <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#33334a' }}>
           Screenshots ({screenshots.length})

@@ -5,7 +5,10 @@ import ScreenshotList from './components/ScreenshotList'
 import CustomizerPanel from './components/CustomizerPanel'
 import ScreenshotPreview, { PhoneCard } from './components/ScreenshotPreview'
 import AppStorePreview from './components/AppStorePreview'
+import ChangelogModal from './components/ChangelogModal'
 import { PRESET_TEMPLATES } from './data/templates'
+import { APP_VERSION } from './data/changelog'
+import { Sparkles } from 'lucide-react'
 
 const DEFAULT_TEMPLATE = PRESET_TEMPLATES[0]
 
@@ -21,6 +24,7 @@ export default function App() {
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE)
   const [deviceType, setDeviceType] = useState('iphone67')
   const [activeTab, setActiveTab] = useState('editor')
+  const [showChangelog, setShowChangelog] = useState(false)
   const [appInfo, setAppInfo] = useState({
     name: 'Your App Name',
     developer: 'Developer Name',
@@ -118,7 +122,7 @@ export default function App() {
         <div className="flex flex-1 overflow-hidden min-h-0">
           {/* Left: Upload + Screenshot list */}
           <div
-            className="flex flex-col border-r shrink-0"
+            className="flex flex-col border-r shrink-0 min-h-0 overflow-hidden"
             style={{ width: 260, borderColor: '#1a1a25', background: '#111118' }}
           >
             <UploadZone onUpload={handleUpload} />
@@ -260,6 +264,39 @@ export default function App() {
           />
         </div>
       )}
+
+      {/* Version + changelog — below header; in editor, sit past sidebar so list can’t cover it */}
+      <div
+        className="fixed flex items-center gap-2"
+        style={{
+          bottom: 16,
+          left: activeTab === 'editor' ? 276 : 16,
+          zIndex: 40,
+        }}
+      >
+        <span style={{ color: '#33334a', fontSize: 11, fontWeight: 500 }}>
+          v{APP_VERSION}
+        </span>
+        <button
+          onClick={() => setShowChangelog(true)}
+          className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors"
+          style={{
+            background: 'rgba(10,10,16,0.85)',
+            border: '1px solid #1a1a25',
+            color: '#55556a',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            lineHeight: 1,
+          }}
+        >
+          <Sparkles size={10} color="#007aff" />
+          Changelog
+        </button>
+      </div>
+
+      {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
     </div>
   )
 }

@@ -95,4 +95,16 @@ export const PRESET_TEMPLATES = [
     subtitleColor: 'rgba(58,26,0,0.6)',
     textPosition: 'top',
   },
+  {
+    id: 'fullMockup',
+    name: 'Full Mockup',
+    /** No marketing text — device fills the card; screenshot is the hero */
+    fullBleedMockup: true,
+    // Layered studio frame: bezels + status strip + screen glow
+    background:
+      'radial-gradient(ellipse 92% 68% at 50% 42%, rgba(52,58,72,0.85) 0%, rgba(24,26,32,0.35) 42%, transparent 58%), linear-gradient(180deg, #2c2d35 0%, #2c2d35 5.8%, #1a1b22 5.8%, #12131a 52%, #0c0d11 100%), linear-gradient(90deg, #08080c 0%, #101018 11%, #101018 89%, #08080c 100%)',
+    titleColor: '#f5f5f7',
+    subtitleColor: 'rgba(180,185,200,0.72)',
+    textPosition: 'bottom',
+  },
 ]
