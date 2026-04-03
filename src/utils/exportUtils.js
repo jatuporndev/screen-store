@@ -1,4 +1,4 @@
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 
@@ -8,28 +8,68 @@ const DEVICE_EXPORT = {
   ipad: { exportW: 2048, exportH: 2732 },
 }
 
-// Renders a hidden export div and captures it with html2canvas
-async function captureElement(element) {
-  // Wait for all web fonts (Inter, etc.) to finish loading so the
-  // exported image matches what the browser renders in the preview
+/**
+ * Capture a hidden export card as a PNG data URL.
+ *
+ * html-to-image renders via SVG foreignObject — the browser handles all CSS
+ * including object-fit:cover natively. However it requires the element to be
+ * in the render tree (not off-screen / visibility:hidden).
+ *
+ * Fix: clone the element, append it to <body> at position fixed / z-index -1
+ * (hidden behind the app's opaque background), capture, then remove the clone.
+ */
+async function captureElement(element, deviceType) {
+  const { exportW, exportH } = DEVICE_EXPORT[deviceType] || DEVICE_EXPORT.iphone67
+  const cssW = exportW / 3
+  const cssH = exportH / 3
+
   await document.fonts.ready
 
-  // Make element temporarily visible so html2canvas can measure it
-  const prevVisibility = element.style.visibility
-  element.style.visibility = 'visible'
+  // Clone and mount on-screen so the browser lays it out and renders images
+  const clone = element.cloneNode(true)
+  Object.assign(clone.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: `${cssW}px`,
+    height: `${cssH}px`,
+    visibility: 'visible',
+    zIndex: '-9999',
+    pointerEvents: 'none',
+  })
+  document.body.appendChild(clone)
+
+  // Wait for any images in the clone to finish loading (data URLs are instant
+  // but the clone img elements still go through the decode pipeline)
+  await Promise.all(
+    [...clone.querySelectorAll('img')].map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise((res) => { img.onload = res; img.onerror = res }),
+    ),
+  )
 
   try {
-    const canvas = await html2canvas(element, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: null,
-      logging: false,
+    const dataUrl = await toPng(clone, {
+      width: cssW,
+      height: cssH,
+      pixelRatio: 3,
+      skipAutoScale: true,
     })
-    return canvas
+    return dataUrl
   } finally {
-    element.style.visibility = prevVisibility
+    document.body.removeChild(clone)
   }
+}
+
+/** Convert a PNG data URL to a Blob. */
+function dataUrlToBlob(dataUrl) {
+  const [header, base64] = dataUrl.split(',')
+  const mime = header.match(/:(.*?);/)[1]
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return new Blob([bytes], { type: mime })
 }
 
 export async function exportSingleScreenshot(screenshotId, template, deviceType, onProgress) {
@@ -38,9 +78,8 @@ export async function exportSingleScreenshot(screenshotId, template, deviceType,
 
   onProgress?.('Rendering…')
   try {
-    const canvas = await captureElement(el)
-    const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'))
-    saveAs(blob, `screenshot-${screenshotId}.png`)
+    const dataUrl = await captureElement(el, deviceType)
+    saveAs(dataUrlToBlob(dataUrl), `screenshot-${screenshotId}.png`)
   } finally {
     onProgress?.(null)
   }
@@ -59,9 +98,8 @@ export async function exportAllScreenshots(screenshots, template, deviceType, on
     const el = document.getElementById(`export-card-${ss.id}`)
     if (!el) continue
 
-    const canvas = await captureElement(el)
-    const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'))
-    folder.file(`screenshot-${String(i + 1).padStart(2, '0')}.png`, blob)
+    const dataUrl = await captureElement(el, deviceType)
+    folder.file(`screenshot-${String(i + 1).padStart(2, '0')}.png`, dataUrlToBlob(dataUrl))
   }
 
   onProgress?.('Creating ZIP…')

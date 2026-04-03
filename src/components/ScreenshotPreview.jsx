@@ -208,16 +208,24 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
             }}
           >
 
-            {/* Screenshot image */}
+            {/* Screenshot image — <img> + object-fit renders reliably in html2canvas; background-image + cover often leaves a black band at the top of the screen */}
             {screenshot.dataUrl && (
-              <div
+              <img
+                alt=""
+                src={screenshot.dataUrl}
+                data-export-cover="true"
+                draggable={false}
                 style={{
                   position: 'absolute',
-                  inset: 0,
-                  backgroundImage: `url(${screenshot.dataUrl})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'top center',
-                  backgroundRepeat: 'no-repeat',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'top center',
+                  borderRadius: screenR,
+                  display: 'block',
+                  pointerEvents: 'none',
                 }}
               />
             )}

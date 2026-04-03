@@ -1,0 +1,12 @@
+---
+description: Agent runs commands and fixes locally—do not offload to the user
+alwaysApply: true
+---
+
+# Execution preference
+
+This workspace has full shell access. Prefer **doing** work over **telling the user** to do it.
+
+- Run installs, builds, tests, linters, cache clears (`node_modules/.vite`, etc.), and dev servers yourself when they help the task.
+- Only ask the user to act when something truly cannot be done from here (e.g. secrets in their account, physical device actions they must perform).
+- After dependency or Vite changes, clear `node_modules/.vite` and verify with `npm run build` when relevant.

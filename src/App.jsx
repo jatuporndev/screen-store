@@ -101,12 +101,24 @@ export default function App() {
       {screenshots.map((ss) => {
         // cardWidth must equal exportW / 3 so that html2canvas at scale:3
         // produces exactly the App Store required pixel dimensions
-        const exportCardWidth = DEVICE_CONFIGS[deviceType].exportW / 3
+        const exp = DEVICE_CONFIGS[deviceType]
+        const exportCardWidth = exp.exportW / 3
+        const exportCardHeight = exp.exportH / 3
         return (
           <div
             key={ss.id}
             id={`export-card-${ss.id}`}
-            style={{ position: 'absolute', top: 0, left: -9999, zIndex: -1, pointerEvents: 'none', visibility: 'hidden' }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: -9999,
+              zIndex: -1,
+              width: `${exportCardWidth}px`,
+              height: `${exportCardHeight}px`,
+              overflow: 'hidden',
+              pointerEvents: 'none',
+              visibility: 'hidden',
+            }}
           >
             <PhoneCard
               screenshot={ss}

@@ -1,10 +1,18 @@
-export const APP_VERSION = '1.2.1'
+export const APP_VERSION = '1.2.2'
 
 /**
  * Each entry: { version, date, tag, changes[] }
  * tag: 'new' | 'fix' | 'improvement'
  */
 export const CHANGELOG = [
+  {
+    version: '1.2.2',
+    date: 'Apr 3, 2026',
+    entries: [
+      { tag: 'fix', text: 'Export now matches preview — switched from html2canvas to html-to-image (SVG foreignObject) so object-fit:cover renders natively and screenshot images appear correctly' },
+      { tag: 'fix', text: 'Export card rendered via a visible clone mounted behind the UI, resolving the blank/black screen caused by capturing off-screen hidden elements' },
+    ],
+  },
   {
     version: '1.2.1',
     date: 'Apr 3, 2026',
