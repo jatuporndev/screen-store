@@ -8,9 +8,14 @@ import AppStorePreview from './components/AppStorePreview'
 import ChangelogModal from './components/ChangelogModal'
 import { PRESET_TEMPLATES } from './data/templates'
 import { APP_VERSION } from './data/changelog'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, ZoomIn, ZoomOut } from 'lucide-react'
 
 const DEFAULT_TEMPLATE = PRESET_TEMPLATES[0]
+
+const PREVIEW_BASE_CARD_W = 260
+const PREVIEW_ZOOM_MIN = 0.4
+const PREVIEW_ZOOM_MAX = 2.5
+const PREVIEW_ZOOM_STEP = 0.1
 
 const DEVICE_CONFIGS = {
   iphone67: { label: 'iPhone 6.7"', exportW: 1290, exportH: 2796 },
@@ -25,6 +30,7 @@ export default function App() {
   const [deviceType, setDeviceType] = useState('iphone67')
   const [activeTab, setActiveTab] = useState('editor')
   const [showChangelog, setShowChangelog] = useState(false)
+  const [previewZoom, setPreviewZoom] = useState(1)
   const [appInfo, setAppInfo] = useState({
     name: 'Your App Name',
     developer: 'Developer Name',
@@ -176,13 +182,13 @@ export default function App() {
 
           {/* Center: mini strip + main preview */}
           <div
-            className="flex-1 flex flex-col overflow-hidden min-w-0"
+            className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0"
             style={{ background: '#0d0d14' }}
           >
-            {/* Mini overview strip */}
+            {/* Mini overview strip — above preview in stacking order so nothing paints over it */}
             {screenshots.length > 0 && (
               <div
-                className="shrink-0 flex items-center gap-2 overflow-x-auto"
+                className="shrink-0 flex items-center gap-2 overflow-x-auto relative z-20"
                 style={{
                   borderBottom: '1px solid #1a1a25',
                   background: '#0a0a10',
@@ -239,39 +245,118 @@ export default function App() {
               </div>
             )}
 
-            {/* Main preview */}
-            <div className="flex-1 flex flex-col items-center justify-center overflow-auto p-8 gap-4">
-              {activeScreenshot ? (
-                <>
-                  <div className="text-xs font-medium tracking-widest uppercase" style={{ color: '#55556a' }}>
-                    Preview — {DEVICE_CONFIGS[deviceType].label}
+            {/* Main preview — inner scroll from top (avoids centered overflow); zoom bar fixed to pane */}
+            <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden z-0">
+              <div
+                className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 min-h-0 flex flex-col items-center gap-4"
+                style={{ justifyContent: 'safe center' }}
+              >
+                {activeScreenshot ? (
+                  <div className="flex flex-col items-center gap-4 shrink-0">
+                    <div className="text-xs font-medium tracking-widest uppercase" style={{ color: '#55556a' }}>
+                      Preview — {DEVICE_CONFIGS[deviceType].label}
+                    </div>
+                    <ScreenshotPreview
+                      screenshot={activeScreenshot}
+                      template={effectiveTemplate}
+                      deviceType={deviceType}
+                      cardWidth={Math.max(80, Math.round(PREVIEW_BASE_CARD_W * previewZoom))}
+                    />
+                    <div className="text-xs" style={{ color: '#55556a' }}>
+                      {DEVICE_CONFIGS[deviceType].exportW} × {DEVICE_CONFIGS[deviceType].exportH} px
+                    </div>
                   </div>
-                  <ScreenshotPreview
-                    screenshot={activeScreenshot}
-                    template={effectiveTemplate}
-                    deviceType={deviceType}
-                    cardWidth={260}
-                  />
-                  <div className="text-xs" style={{ color: '#55556a' }}>
-                    {DEVICE_CONFIGS[deviceType].exportW} × {DEVICE_CONFIGS[deviceType].exportH} px
+                ) : (
+                  <div className="flex flex-col items-center gap-4 select-none">
+                    <div
+                      className="flex items-center justify-center rounded-2xl"
+                      style={{ width: 80, height: 80, background: '#1a1a25' }}
+                    >
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="2" width="14" height="20" rx="3" stroke="#33334a" strokeWidth="1.5" />
+                        <rect x="8" y="5" width="8" height="12" rx="1" fill="#33334a" />
+                        <circle cx="12" cy="19" r="1" fill="#33334a" />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold" style={{ color: '#88889a' }}>No screenshots yet</p>
+                      <p className="text-sm mt-1" style={{ color: '#55556a' }}>Upload app screenshots to get started</p>
+                    </div>
                   </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center gap-4 select-none">
-                  <div
-                    className="flex items-center justify-center rounded-2xl"
-                    style={{ width: 80, height: 80, background: '#1a1a25' }}
+                )}
+              </div>
+
+              {activeScreenshot && (
+                <div
+                  className="flex items-center gap-1 rounded-lg p-0.5"
+                  style={{
+                    position: 'absolute',
+                    right: 16,
+                    bottom: 16,
+                    zIndex: 10,
+                    background: '#1a1a25',
+                    border: '1px solid #252535',
+                    boxShadow: '0 4px 18px rgba(0,0,0,0.45)',
+                  }}
+                >
+                  <button
+                    type="button"
+                    title="Zoom out"
+                    aria-label="Zoom out preview"
+                    disabled={previewZoom <= PREVIEW_ZOOM_MIN + 1e-6}
+                    onClick={() =>
+                      setPreviewZoom((z) =>
+                        Math.max(PREVIEW_ZOOM_MIN, Math.round((z - PREVIEW_ZOOM_STEP) * 10) / 10),
+                      )
+                    }
+                    className="flex items-center justify-center rounded-md transition-colors disabled:opacity-35 disabled:cursor-not-allowed"
+                    style={{
+                      width: 30,
+                      height: 28,
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#a8a8b8',
+                      cursor: previewZoom <= PREVIEW_ZOOM_MIN + 1e-6 ? 'not-allowed' : 'pointer',
+                    }}
                   >
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                      <rect x="5" y="2" width="14" height="20" rx="3" stroke="#33334a" strokeWidth="1.5" />
-                      <rect x="8" y="5" width="8" height="12" rx="1" fill="#33334a" />
-                      <circle cx="12" cy="19" r="1" fill="#33334a" />
-                    </svg>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold" style={{ color: '#88889a' }}>No screenshots yet</p>
-                    <p className="text-sm mt-1" style={{ color: '#55556a' }}>Upload app screenshots to get started</p>
-                  </div>
+                    <ZoomOut size={16} strokeWidth={2} />
+                  </button>
+                  <button
+                    type="button"
+                    title="Reset zoom to 100%"
+                    onClick={() => setPreviewZoom(1)}
+                    className="text-[11px] font-mono font-semibold tabular-nums px-1 min-w-[3rem] text-center"
+                    style={{
+                      color: '#88889a',
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {Math.round(previewZoom * 100)}%
+                  </button>
+                  <button
+                    type="button"
+                    title="Zoom in"
+                    aria-label="Zoom in preview"
+                    disabled={previewZoom >= PREVIEW_ZOOM_MAX - 1e-6}
+                    onClick={() =>
+                      setPreviewZoom((z) =>
+                        Math.min(PREVIEW_ZOOM_MAX, Math.round((z + PREVIEW_ZOOM_STEP) * 10) / 10),
+                      )
+                    }
+                    className="flex items-center justify-center rounded-md transition-colors disabled:opacity-35 disabled:cursor-not-allowed"
+                    style={{
+                      width: 30,
+                      height: 28,
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#a8a8b8',
+                      cursor: previewZoom >= PREVIEW_ZOOM_MAX - 1e-6 ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    <ZoomIn size={16} strokeWidth={2} />
+                  </button>
                 </div>
               )}
             </div>

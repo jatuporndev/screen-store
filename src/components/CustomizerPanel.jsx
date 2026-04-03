@@ -253,12 +253,13 @@ export default function CustomizerPanel({
     }
   }
 
-  /** Gallery selection: always update global template; if per-shot custom is on, keep it in sync (fixes reset / stale global). */
+  /** Gallery: global template when not overriding; per-shot only when Custom style is on (avoids changing other screenshots). */
   const applyPresetFromGallery = (preset) => {
     const next = { ...preset }
-    setTemplate(next)
     if (isCustomStyle && activeScreenshot) {
       onUpdateScreenshot(activeScreenshot.id, { customStyle: next })
+    } else {
+      setTemplate(next)
     }
   }
 

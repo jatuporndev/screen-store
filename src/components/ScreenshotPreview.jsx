@@ -24,20 +24,35 @@ const NOTCH_TYPE = {
   ipad: 'none',
 }
 
-// Soft shadow — flat orthographic App Store style (reference: minimal float)
+// Soft shadow — device reads slightly lifted; frame stays visually flat
 const AMBIENT_SHADOW = [
   '0 1px 2px rgba(0,0,0,0.10)',
   '0 6px 16px rgba(0,0,0,0.08)',
   '0 16px 36px rgba(0,0,0,0.06)',
 ].join(', ')
 
-// Side hardware — fractions of phoneH; subtle metallic read like marketing mockups
+// Outer rail: flat grey — tiny tonal shift only (no strong metallic banding)
+const FRAME_RAIL_BG = 'linear-gradient(180deg, #b0b4bd 0%, #a9adb6 100%)'
+
+// Side hardware — low-profile “flat” keys (thin along edge, shallow standoff)
 const SIDE_BUTTONS = [
-  { side: 'left',  topFrac: 0.155, hFrac: 0.031 }, // Action
-  { side: 'left',  topFrac: 0.215, hFrac: 0.058 }, // Vol +
-  { side: 'left',  topFrac: 0.293, hFrac: 0.058 }, // Vol −
-  { side: 'right', topFrac: 0.215, hFrac: 0.078 }, // Power
+  { side: 'left',  topFrac: 0.146, hFrac: 0.028 }, // Action
+  { side: 'left',  topFrac: 0.206, hFrac: 0.056 }, // Vol +
+  { side: 'left',  topFrac: 0.278, hFrac: 0.056 }, // Vol −
+  { side: 'right', topFrac: 0.236, hFrac: 0.078 }, // Power (between vol pair)
 ]
+
+/** Side keys: flat mid-grey (no white stripe / inset “3D”) */
+const SIDE_BTN_GREY = '#7e828a'
+
+function sideButtonSurfaceStyle(side, capR) {
+  const isLeft = side === 'left'
+  return {
+    background: SIDE_BTN_GREY,
+    borderRadius: isLeft ? `${capR}px 1px 1px ${capR}px` : `1px ${capR}px ${capR}px 1px`,
+    boxShadow: 'none',
+  }
+}
 
 export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
   const ratio     = DEVICE_RATIOS[deviceType] || DEVICE_RATIOS.iphone67
@@ -94,9 +109,8 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
   const notchH = screenW * 0.073
   const notchR = notchH * 0.45           // rounded bottom corners
 
-  // --- Side buttons: slight standoff + soft metallic highlight ---
-  const btnW = Math.max(2, phoneW * 0.017)
-  const btnR = Math.max(1, btnW * 0.42)
+  // --- Side buttons: shallow standoff + squarer caps (reads flatter on the rail) ---
+  const btnW = Math.max(2, phoneW * 0.0085)
 
   // --- Typography ---
   const fontTitle = cardWidth * 0.083
@@ -151,26 +165,23 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
       {/* Side buttons skipped for full-bleed — asymmetric L/R volume reads as off-center */}
       {!fullBleed &&
         (deviceType === 'iphone67' || deviceType === 'iphone65') &&
-        SIDE_BUTTONS.map((btn, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              width: btnW,
-              height: phoneH * btn.hFrac,
-              top: phoneH * btn.topFrac,
-              ...(btn.side === 'left' ? { left: -btnW } : { right: -btnW }),
-              background:
-                btn.side === 'left'
-                  ? 'linear-gradient(to right, #2c2c2c, #5c5c5c 48%, #343434)'
-                  : 'linear-gradient(to left, #2c2c2c, #5c5c5c 48%, #343434)',
-              borderRadius:
-                btn.side === 'left'
-                  ? `${btnR}px 0 0 ${btnR}px`
-                  : `0 ${btnR}px ${btnR}px 0`,
-            }}
-          />
-        ))}
+        SIDE_BUTTONS.map((btn, i) => {
+          const h = phoneH * btn.hFrac
+          const capR = Math.max(1, Math.min(btnW * 0.28, h * 0.1))
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                width: btnW,
+                height: h,
+                top: phoneH * btn.topFrac,
+                ...(btn.side === 'left' ? { left: -btnW } : { right: -btnW }),
+                ...sideButtonSurfaceStyle(btn.side, capR),
+              }}
+            />
+          )
+        })}
 
       {/* ── Bevel ring (1px metallic gradient) ── */}
       <div
@@ -179,8 +190,7 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
           inset: 0,
           padding: bevel,
           borderRadius: outerR + bevel,
-          background:
-            'linear-gradient(145deg, #525252 0%, #383838 42%, #161616 100%)',
+          background: FRAME_RAIL_BG,
           boxShadow: AMBIENT_SHADOW,
           boxSizing: 'border-box',
         }}
@@ -265,18 +275,19 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
               />
             )}
 
-            {/* ── iPhone home indicator (thin bar, iOS) ── */}
+            {/* ── iPhone home indicator — flat bar (reads on dark UIs; like reference pill) ── */}
             {(deviceType === 'iphone67' || deviceType === 'iphone65') && (
               <div
                 style={{
                   position: 'absolute',
-                  bottom: screenH * 0.011,
+                  bottom: screenH * 0.012,
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  width: screenW * 0.34,
-                  height: Math.max(3, screenH * 0.0038),
-                  background: 'rgba(255,255,255,0.38)',
+                  width: screenW * 0.368,
+                  height: Math.max(4, screenW * 0.0072),
+                  background: 'rgba(255,255,255,0.4)',
                   borderRadius: 999,
+                  boxShadow: '0 0 0 0.5px rgba(0,0,0,0.22)',
                   zIndex: 10,
                 }}
               />
@@ -347,6 +358,7 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
       style={{
         width: cardWidth,
         height: cardH,
+        flexShrink: 0,
         background: template.background,
         // Larger corner radius for a more modern App Store card feel
         borderRadius: cardWidth * 0.09,
