@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Monitor, Smartphone, Tablet, Download, Eye, Pencil, Loader2, AlertTriangle } from 'lucide-react'
+import { Monitor, Smartphone, Tablet, Download, Eye, Pencil, Loader2, AlertTriangle, Store } from 'lucide-react'
 import { exportAllScreenshots } from '../utils/exportUtils'
 
 const DeviceButton = ({ id, label, icon: Icon, active, onClick }) => (
@@ -25,7 +25,6 @@ export default function Header({
   deviceConfigs,
   screenshots,
   template,
-  appInfo,
 }) {
   const [exportStatus, setExportStatus] = useState(null)
   const [showStorageInfo, setShowStorageInfo] = useState(false)
@@ -44,10 +43,21 @@ export default function Header({
 
   const handleExportAll = async () => {
     if (screenshots.length === 0) return
-    await exportAllScreenshots(screenshots, template, deviceType, setExportStatus)
+    const playOpts =
+      activeTab === 'play-preview'
+        ? { folderName: 'play-store-screenshots', zipFileName: 'play-store-screenshots.zip' }
+        : undefined
+    await exportAllScreenshots(screenshots, template, deviceType, setExportStatus, playOpts)
   }
 
-  const deviceIcons = { iphone67: Smartphone, iphone65: Smartphone, ipad: Tablet }
+  const deviceIcons = {
+    iphone67: Smartphone,
+    iphone65: Smartphone,
+    ipad: Tablet,
+    android20_9: Smartphone,
+    android16_9: Smartphone,
+    androidTablet: Tablet,
+  }
 
   return (
     <header
@@ -78,7 +88,8 @@ export default function Header({
       >
         {[
           { id: 'editor', label: 'Editor', Icon: Pencil },
-          { id: 'preview', label: 'App Store Preview', Icon: Eye },
+          { id: 'preview', label: 'App Store', Icon: Eye },
+          { id: 'play-preview', label: 'Play Store', Icon: Store },
         ].map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -95,8 +106,8 @@ export default function Header({
         ))}
       </div>
 
-      {/* Device selector */}
-      <div className="flex items-center gap-1.5 ml-2">
+      {/* Device selector — iOS + Android mockups */}
+      <div className="flex items-center gap-1.5 ml-2 flex-wrap min-w-0 max-w-[42vw] sm:max-w-none">
         {Object.entries(deviceConfigs).map(([id, cfg]) => (
           <DeviceButton
             key={id}

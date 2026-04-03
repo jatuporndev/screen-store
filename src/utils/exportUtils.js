@@ -6,6 +6,9 @@ const DEVICE_EXPORT = {
   iphone67: { exportW: 1290, exportH: 2796 },
   iphone65: { exportW: 1284, exportH: 2778 },
   ipad: { exportW: 2048, exportH: 2732 },
+  android20_9: { exportW: 1080, exportH: 2400 },
+  android16_9: { exportW: 1080, exportH: 1920 },
+  androidTablet: { exportW: 1920, exportH: 1200 },
 }
 
 /**
@@ -85,11 +88,15 @@ export async function exportSingleScreenshot(screenshotId, template, deviceType,
   }
 }
 
-export async function exportAllScreenshots(screenshots, template, deviceType, onProgress) {
+export async function exportAllScreenshots(screenshots, template, deviceType, onProgress, options) {
   if (screenshots.length === 0) return
 
+  const opts = options ?? {}
+  const folderName = opts.folderName ?? 'app-store-screenshots'
+  const zipFileName = opts.zipFileName ?? 'app-store-screenshots.zip'
+
   const zip = new JSZip()
-  const folder = zip.folder('app-store-screenshots')
+  const folder = zip.folder(folderName)
 
   for (let i = 0; i < screenshots.length; i++) {
     const ss = screenshots[i]
@@ -104,6 +111,6 @@ export async function exportAllScreenshots(screenshots, template, deviceType, on
 
   onProgress?.('Creating ZIP…')
   const zipBlob = await zip.generateAsync({ type: 'blob' })
-  saveAs(zipBlob, 'app-store-screenshots.zip')
+  saveAs(zipBlob, zipFileName)
   onProgress?.(null)
 }

@@ -1,10 +1,28 @@
-export const APP_VERSION = '1.2.2'
+export const APP_VERSION = '2.0.0'
 
 /**
  * Each entry: { version, date, tag, changes[] }
  * tag: 'new' | 'fix' | 'improvement'
  */
 export const CHANGELOG = [
+  {
+    version: '2.0.0',
+    date: 'Apr 4, 2026',
+    entries: [
+      { tag: 'new', text: 'Major release — Google Play Store listing preview: Material 3 dark UI with accurate app bar, full-width Install pill, metadata chips, collapsible About with topic tags, ratings breakdown, sample review card, Data safety section, and App info' },
+      { tag: 'new', text: 'Android mockups in the editor: 20:9 and 16:9 phones plus landscape tablet, with punch-hole, gesture nav, and export sizes matched to common Play requirements' },
+      { tag: 'improvement', text: 'Header Export All writes play-store-screenshots.zip when the Play Store tab is active; npm package version aligned with the app (2.0.0)' },
+    ],
+  },
+  {
+    version: '1.3.0',
+    date: 'Apr 4, 2026',
+    entries: [
+      { tag: 'new', text: 'Play Store preview tab — dark Material-style listing mock with Install row, screenshots carousel, and ratings' },
+      { tag: 'new', text: 'Android device mockups: 20:9 phone (1080×2400), 16:9 phone (1080×1920), and landscape tablet (1920×1200) with punch-hole, gesture pill, and Play-appropriate export sizes' },
+      { tag: 'improvement', text: "Header export ZIP uses play-store-screenshots when you're on the Play Store tab" },
+    ],
+  },
   {
     version: '1.2.2',
     date: 'Apr 3, 2026',

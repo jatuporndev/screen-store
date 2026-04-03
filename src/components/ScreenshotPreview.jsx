@@ -16,13 +16,24 @@ const DEVICE_RATIOS = {
   iphone67: 1290 / 2796,
   iphone65: 1284 / 2778,
   ipad: 2048 / 2732,
+  android20_9: 1080 / 2400,
+  android16_9: 1080 / 1920,
+  androidTablet: 1920 / 1200,
 }
 
 const NOTCH_TYPE = {
   iphone67: 'di',
   iphone65: 'notch',
   ipad: 'none',
+  android20_9: 'punch',
+  android16_9: 'punch',
+  androidTablet: 'none',
 }
+
+const ANDROID_PHONE_IDS = new Set(['android20_9', 'android16_9'])
+
+/** Power key on the right — reads as Android slab phone */
+const ANDROID_SIDE_BUTTONS = [{ side: 'right', topFrac: 0.22, hFrac: 0.09 }]
 
 // Soft shadow — device reads slightly lifted; frame stays visually flat
 const AMBIENT_SHADOW = [
@@ -33,6 +44,7 @@ const AMBIENT_SHADOW = [
 
 // Outer rail: flat grey — tiny tonal shift only (no strong metallic banding)
 const FRAME_RAIL_BG = 'linear-gradient(180deg, #b0b4bd 0%, #a9adb6 100%)'
+const ANDROID_FRAME_RAIL_BG = 'linear-gradient(180deg, #9ea3ad 0%, #9398a2 100%)'
 
 // Side hardware — low-profile “flat” keys (thin along edge, shallow standoff)
 const SIDE_BUTTONS = [
@@ -57,6 +69,9 @@ function sideButtonSurfaceStyle(side, capR) {
 export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
   const ratio     = DEVICE_RATIOS[deviceType] || DEVICE_RATIOS.iphone67
   const notchType = NOTCH_TYPE[deviceType]    || 'di'
+  const isAndroidPhone = ANDROID_PHONE_IDS.has(deviceType)
+  const isAndroidTablet = deviceType === 'androidTablet'
+  const isAndroid = isAndroidPhone || isAndroidTablet
   const fullBleed = template.fullBleedMockup === true
 
   // Card dimensions
@@ -89,10 +104,12 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
 
   // --- Frame layers ---
   const bevel      = 1                   // 1px metallic bevel ring
-  const bodyPad    = phoneW * 0.017     // thin black bezel (App Store card style)
-  const outerR     = phoneW * 0.12       // outer corner radius (matches real iPhone proportions)
+  const bodyPad    = isAndroidTablet ? phoneW * 0.022 : phoneW * 0.017
+  const outerR     = isAndroidTablet ? phoneW * 0.055 : isAndroid ? phoneW * 0.09 : phoneW * 0.12
   const bodyR      = outerR - bevel
   const screenR    = bodyR  - bodyPad
+  const frameRailBg = isAndroid ? ANDROID_FRAME_RAIL_BG : FRAME_RAIL_BG
+  const bodyFill = isAndroid ? '#121214' : '#0d0d0d'
 
   // Screen area inside the bezel
   const screenW = phoneW - 2 * (bevel + bodyPad)
@@ -108,6 +125,10 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
   const notchW = screenW * 0.44
   const notchH = screenW * 0.073
   const notchR = notchH * 0.45           // rounded bottom corners
+
+  // --- Android punch-hole (center top) ---
+  const punchD = screenW * 0.048
+  const punchTop = screenH * 0.022
 
   // --- Side buttons: shallow standoff + squarer caps (reads flatter on the rail) ---
   const btnW = Math.max(2, phoneW * 0.0085)
@@ -163,6 +184,24 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
     <div style={{ position: 'relative', flexShrink: 0, width: phoneW, height: phoneH }}>
 
       {/* Side buttons skipped for full-bleed — asymmetric L/R volume reads as off-center */}
+      {!fullBleed && isAndroidPhone &&
+        ANDROID_SIDE_BUTTONS.map((btn, i) => {
+          const h = phoneH * btn.hFrac
+          const capR = Math.max(1, Math.min(btnW * 0.28, h * 0.1))
+          return (
+            <div
+              key={`a-${i}`}
+              style={{
+                position: 'absolute',
+                width: btnW,
+                height: h,
+                top: phoneH * btn.topFrac,
+                ...(btn.side === 'left' ? { left: -btnW } : { right: -btnW }),
+                ...sideButtonSurfaceStyle(btn.side, capR),
+              }}
+            />
+          )
+        })}
       {!fullBleed &&
         (deviceType === 'iphone67' || deviceType === 'iphone65') &&
         SIDE_BUTTONS.map((btn, i) => {
@@ -190,7 +229,7 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
           inset: 0,
           padding: bevel,
           borderRadius: outerR + bevel,
-          background: FRAME_RAIL_BG,
+          background: frameRailBg,
           boxShadow: AMBIENT_SHADOW,
           boxSizing: 'border-box',
         }}
@@ -202,7 +241,7 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
             height: '100%',
             padding: bodyPad,
             borderRadius: bodyR,
-            background: '#0d0d0d',
+            background: bodyFill,
             boxSizing: 'border-box',
           }}
         >
@@ -275,6 +314,42 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
               />
             )}
 
+            {/* ── Android punch-hole ── */}
+            {notchType === 'punch' && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: punchTop,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: punchD,
+                  height: punchD,
+                  borderRadius: '50%',
+                  background: '#080808',
+                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+                  zIndex: 10,
+                }}
+              />
+            )}
+
+            {/* ── Android tablet — subtle front cam in bezel ── */}
+            {isAndroidTablet && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: screenH * 0.018,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: screenW * 0.018,
+                  height: screenW * 0.018,
+                  borderRadius: '50%',
+                  background: '#1a1a1e',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  zIndex: 10,
+                }}
+              />
+            )}
+
             {/* ── iPhone home indicator — flat bar (reads on dark UIs; like reference pill) ── */}
             {(deviceType === 'iphone67' || deviceType === 'iphone65') && (
               <div
@@ -305,6 +380,40 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
                   height: Math.max(2, screenH * 0.005),
                   background: 'rgba(255,255,255,0.3)',
                   borderRadius: 3,
+                  zIndex: 10,
+                }}
+              />
+            )}
+
+            {/* ── Android gesture pill ── */}
+            {isAndroidPhone && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: screenH * 0.012,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: screenW * 0.26,
+                  height: Math.max(3, screenW * 0.0075),
+                  background: 'rgba(255,255,255,0.32)',
+                  borderRadius: 999,
+                  zIndex: 10,
+                }}
+              />
+            )}
+
+            {/* ── Android tablet — optional nav hint ── */}
+            {isAndroidTablet && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: screenH * 0.02,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: screenW * 0.06,
+                  height: Math.max(2, screenH * 0.004),
+                  background: 'rgba(255,255,255,0.22)',
+                  borderRadius: 2,
                   zIndex: 10,
                 }}
               />

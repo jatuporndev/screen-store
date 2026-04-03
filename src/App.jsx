@@ -5,6 +5,7 @@ import ScreenshotList from './components/ScreenshotList'
 import CustomizerPanel from './components/CustomizerPanel'
 import ScreenshotPreview, { PhoneCard } from './components/ScreenshotPreview'
 import AppStorePreview from './components/AppStorePreview'
+import PlayStorePreview from './components/PlayStorePreview'
 import ChangelogModal from './components/ChangelogModal'
 import { PRESET_TEMPLATES } from './data/templates'
 import { APP_VERSION } from './data/changelog'
@@ -21,6 +22,9 @@ const DEVICE_CONFIGS = {
   iphone67: { label: 'iPhone 6.7"', exportW: 1290, exportH: 2796 },
   iphone65: { label: 'iPhone 6.5"', exportW: 1284, exportH: 2778 },
   ipad: { label: 'iPad Pro', exportW: 2048, exportH: 2732 },
+  android20_9: { label: 'Android 20:9', exportW: 1080, exportH: 2400 },
+  android16_9: { label: 'Android 16:9', exportW: 1080, exportH: 1920 },
+  androidTablet: { label: 'Android tablet', exportW: 1920, exportH: 1200 },
 }
 
 export default function App() {
@@ -100,7 +104,6 @@ export default function App() {
         deviceConfigs={DEVICE_CONFIGS}
         screenshots={screenshots}
         template={template}
-        appInfo={appInfo}
       />
 
       {/* Hidden export cards for all screenshots — used by html2canvas */}
@@ -377,7 +380,7 @@ export default function App() {
             />
           </div>
         </div>
-      ) : (
+      ) : activeTab === 'preview' ? (
         <div className="flex-1 overflow-auto min-h-0">
           <AppStorePreview
             screenshots={screenshots}
@@ -385,6 +388,15 @@ export default function App() {
             deviceType={deviceType}
             appInfo={appInfo}
             setAppInfo={setAppInfo}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto min-h-0">
+          <PlayStorePreview
+            screenshots={screenshots}
+            template={template}
+            deviceType={deviceType}
+            appInfo={appInfo}
           />
         </div>
       )}
