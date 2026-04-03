@@ -534,28 +534,30 @@ export default function CustomizerPanel({
                         </div>
                       )}
 
-                      <Label>CSS value</Label>
-                      <textarea
-                        value={bg}
-                        onChange={(e) => applyStyleChange((t) => ({ ...t, background: e.target.value }))}
-                        placeholder="#hex or linear-gradient(...)"
-                        rows={2}
-                        spellCheck={false}
-                        style={{
-                          width: '100%',
-                          background: '#0d0d12',
-                          border: '1px solid #252535',
-                          borderRadius: 8,
-                          padding: '8px 10px',
-                          color: '#c8c8d4',
-                          fontSize: 11,
-                          fontFamily: 'ui-monospace, monospace',
-                          outline: 'none',
-                          boxSizing: 'border-box',
-                          resize: 'vertical',
-                          minHeight: 52,
-                        }}
-                      />
+                      <div className="mt-4">
+                        <Label>CSS value</Label>
+                        <textarea
+                          value={bg}
+                          onChange={(e) => applyStyleChange((t) => ({ ...t, background: e.target.value }))}
+                          placeholder="#hex or linear-gradient(...)"
+                          rows={2}
+                          spellCheck={false}
+                          style={{
+                            width: '100%',
+                            background: '#0d0d12',
+                            border: '1px solid #252535',
+                            borderRadius: 8,
+                            padding: '8px 10px',
+                            color: '#c8c8d4',
+                            fontSize: 11,
+                            fontFamily: 'ui-monospace, monospace',
+                            outline: 'none',
+                            boxSizing: 'border-box',
+                            resize: 'vertical',
+                            minHeight: 52,
+                          }}
+                        />
+                      </div>
 
                       <div
                         className="mt-3 rounded-xl overflow-hidden"

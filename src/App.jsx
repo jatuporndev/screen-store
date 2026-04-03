@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Header from './components/Header'
 import UploadZone from './components/UploadZone'
 import ScreenshotList from './components/ScreenshotList'
@@ -26,6 +26,9 @@ const DEVICE_CONFIGS = {
   android16_9: { label: 'Android 16:9', exportW: 1080, exportH: 1920 },
   androidTablet: { label: 'Android tablet', exportW: 1920, exportH: 1200 },
 }
+
+const IOS_DEVICE_IDS = ['iphone67', 'iphone65', 'ipad']
+const ANDROID_DEVICE_IDS = ['android20_9', 'android16_9', 'androidTablet']
 
 export default function App() {
   const [screenshots, setScreenshots] = useState([])
@@ -94,6 +97,14 @@ export default function App() {
   const activeScreenshot = screenshots.find((ss) => ss.id === activeScreenshotId) || null
   const effectiveTemplate = activeScreenshot?.customStyle || template
 
+  useEffect(() => {
+    setDeviceType((dt) => {
+      if (activeTab === 'preview' && ANDROID_DEVICE_IDS.includes(dt)) return 'iphone67'
+      if (activeTab === 'play-preview' && IOS_DEVICE_IDS.includes(dt)) return 'android20_9'
+      return dt
+    })
+  }, [activeTab])
+
   return (
     <div className="h-full flex flex-col" style={{ background: '#0a0a0f' }}>
       <Header
@@ -102,6 +113,8 @@ export default function App() {
         deviceType={deviceType}
         setDeviceType={setDeviceType}
         deviceConfigs={DEVICE_CONFIGS}
+        iosDeviceIds={IOS_DEVICE_IDS}
+        androidDeviceIds={ANDROID_DEVICE_IDS}
         screenshots={screenshots}
         template={template}
       />

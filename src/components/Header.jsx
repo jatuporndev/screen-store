@@ -4,12 +4,13 @@ import { exportAllScreenshots } from '../utils/exportUtils'
 
 const DeviceButton = ({ id, label, icon: Icon, active, onClick }) => (
   <button
+    type="button"
     onClick={() => onClick(id)}
-    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all"
     style={{
-      background: active ? '#007aff' : 'transparent',
-      color: active ? '#fff' : '#88889a',
-      border: `1px solid ${active ? '#007aff' : '#252535'}`,
+      background: active ? '#252535' : 'transparent',
+      color: active ? '#f0f0f5' : '#55556a',
+      border: 'none',
     }}
   >
     <Icon size={13} />
@@ -17,12 +18,19 @@ const DeviceButton = ({ id, label, icon: Icon, active, onClick }) => (
   </button>
 )
 
+const PLATFORM_LABEL_STYLES = {
+  ios: { label: 'iOS', color: '#007aff' },
+  android: { label: 'Android', color: '#3ddc84' },
+}
+
 export default function Header({
   activeTab,
   setActiveTab,
   deviceType,
   setDeviceType,
   deviceConfigs,
+  iosDeviceIds,
+  androidDeviceIds,
   screenshots,
   template,
 }) {
@@ -59,17 +67,52 @@ export default function Header({
     androidTablet: Tablet,
   }
 
+  const showIosDevices = activeTab === 'editor' || activeTab === 'preview'
+  const showAndroidDevices = activeTab === 'editor' || activeTab === 'play-preview'
+
+  const renderDeviceGroup = (platform, ids) => {
+    const ls = PLATFORM_LABEL_STYLES[platform]
+    return (
+      <div
+        className="flex items-center gap-2 rounded-lg p-0.5 pl-2"
+        style={{ background: '#1a1a25', border: '1px solid #252535' }}
+      >
+        <span
+          className="text-[10px] font-bold uppercase tracking-widest shrink-0 select-none"
+          style={{ color: ls.color }}
+        >
+          {ls.label}
+        </span>
+        <div className="flex items-center gap-0.5 flex-wrap p-0.5">
+          {ids.map((id) => {
+            const cfg = deviceConfigs[id]
+            if (!cfg) return null
+            return (
+              <DeviceButton
+                key={id}
+                id={id}
+                label={cfg.label}
+                icon={deviceIcons[id]}
+                active={deviceType === id}
+                onClick={setDeviceType}
+              />
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <header
-      className="flex items-center px-5 gap-4 shrink-0 overflow-hidden"
+      className="flex flex-wrap items-center px-5 gap-x-4 gap-y-2 shrink-0 min-h-[60px] py-2.5"
       style={{
-        height: 60,
         background: '#111118',
         borderBottom: '1px solid #1a1a25',
       }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-2 mr-2">
+      <div className="flex items-center gap-2 mr-2 shrink-0">
         <div
           className="flex items-center justify-center rounded-lg"
           style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #007aff, #5856d6)' }}
@@ -83,7 +126,7 @@ export default function Header({
 
       {/* Tab switcher */}
       <div
-        className="flex items-center rounded-lg p-0.5"
+        className="flex items-center rounded-lg p-0.5 shrink-0"
         style={{ background: '#1a1a25', border: '1px solid #252535' }}
       >
         {[
@@ -106,28 +149,16 @@ export default function Header({
         ))}
       </div>
 
-      {/* Device selector — iOS + Android mockups */}
-      <div className="flex items-center gap-1.5 ml-2 flex-wrap min-w-0 max-w-[42vw] sm:max-w-none">
-        {Object.entries(deviceConfigs).map(([id, cfg]) => (
-          <DeviceButton
-            key={id}
-            id={id}
-            label={cfg.label}
-            icon={deviceIcons[id]}
-            active={deviceType === id}
-            onClick={setDeviceType}
-          />
-        ))}
+      {/* Device presets: iOS and Android in separate groups (store tabs show one platform only) */}
+      <div className="flex items-center gap-3 ml-1 flex-wrap min-w-0">
+        {showIosDevices && renderDeviceGroup('ios', iosDeviceIds)}
+        {showIosDevices && showAndroidDevices && (
+          <div className="hidden sm:block h-7 w-px shrink-0" style={{ background: '#2a2a38' }} aria-hidden />
+        )}
+        {showAndroidDevices && renderDeviceGroup('android', androidDeviceIds)}
       </div>
 
       <div className="flex-1" />
-
-      {/* Screenshot count */}
-      {screenshots.length > 0 && (
-        <span className="text-xs" style={{ color: '#55556a' }}>
-          {screenshots.length} screenshot{screenshots.length !== 1 ? 's' : ''}
-        </span>
-      )}
 
       {/* Local-only storage notice */}
       <div ref={storageRef} style={{ position: 'relative' }}>
@@ -180,9 +211,9 @@ export default function Header({
       <button
         onClick={handleExportAll}
         disabled={screenshots.length === 0 || !!exportStatus}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all shrink-0"
         style={{
-          background: screenshots.length === 0 ? '#1a1a25' : 'linear-gradient(135deg, #007aff, #5856d6)',
+          background: screenshots.length === 0 ? '#1a1a25' : '#007aff',
           color: screenshots.length === 0 ? '#33334a' : '#fff',
           cursor: screenshots.length === 0 ? 'not-allowed' : 'pointer',
           border: 'none',
@@ -190,12 +221,12 @@ export default function Header({
       >
         {exportStatus ? (
           <>
-            <Loader2 size={14} className="animate-spin" />
+            <Loader2 size={12} className="animate-spin" />
             {exportStatus}
           </>
         ) : (
           <>
-            <Download size={14} />
+            <Download size={12} />
             Export All
           </>
         )}

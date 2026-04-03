@@ -1,10 +1,20 @@
-export const APP_VERSION = '2.0.0'
+export const APP_VERSION = '2.1.0'
 
 /**
  * Each entry: { version, date, tag, changes[] }
  * tag: 'new' | 'fix' | 'improvement'
  */
 export const CHANGELOG = [
+  {
+    version: '2.1.0',
+    date: 'Apr 4, 2026',
+    entries: [
+      { tag: 'improvement', text: 'Header: iOS and Android device sizes in separate groups; App Store tab shows iOS only, Play Store tab Android only, with a sensible default when switching tabs' },
+      { tag: 'improvement', text: 'Device buttons match the neutral Editor tab style; platform labels (iOS / Android) stay blue and green for quick scanning' },
+      { tag: 'improvement', text: 'Export All is more compact, solid blue (no gradient); screenshot count removed from the header' },
+      { tag: 'improvement', text: 'Colors → Background: extra spacing above the CSS value field' },
+    ],
+  },
   {
     version: '2.0.0',
     date: 'Apr 4, 2026',
