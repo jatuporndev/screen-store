@@ -10,6 +10,7 @@
  *   iphone67 → Dynamic Island (pill + camera lens)
  *   iphone65 → Traditional notch (iPhone XS Max)
  *   ipad     → Home indicator bar
+ *   androidTablet → landscape (1920×1200); layout clamps so frame fits inside the card
  */
 
 const DEVICE_RATIOS = {
@@ -41,6 +42,8 @@ const AMBIENT_SHADOW = [
   '0 6px 16px rgba(0,0,0,0.08)',
   '0 16px 36px rgba(0,0,0,0.06)',
 ].join(', ')
+/** Landscape tablet: tight card + bottom caption — large blur was painting over the text (layout box ignored shadow overflow). */
+const TABLET_AMBIENT_SHADOW = '0 2px 6px rgba(0,0,0,0.14), 0 6px 14px rgba(0,0,0,0.08)'
 
 // Outer rail: flat grey — tiny tonal shift only (no strong metallic banding)
 const FRAME_RAIL_BG = 'linear-gradient(180deg, #b0b4bd 0%, #a9adb6 100%)'
@@ -84,6 +87,8 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
   let phoneW
   let phoneH
   let textH
+  /** Space between device and caption — real shadow extends past the phone’s layout box; flex gap reserves it. */
+  let blockGap = 0
 
   if (fullBleed) {
     textH = 0
@@ -95,11 +100,24 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
       phoneH = innerH
       phoneW = phoneH * ratio
     }
+    // Landscape (ratio > 1): height-first sizing can make phoneW wider than innerW — scale to fit
+    const scale = Math.min(1, innerW / phoneW, innerH / phoneH)
+    phoneW *= scale
+    phoneH *= scale
   } else {
-    const textFrac = 0.22
-    textH = cardH * textFrac
-    phoneH = cardH * (1 - textFrac) - cardWidth * 0.04
+    // Landscape tablets have a short card (ratio > 1) — dedicate more height to the text block
+    // and scale the gap relative to innerH so thumbnails aren't wrecked by a fixed 12 px gap.
+    const textFrac = isAndroidTablet ? 0.30 : 0.22
+    blockGap = isAndroidTablet ? Math.max(2, Math.round(innerH * 0.08)) : 0
+    // textH + blockGap + phoneH = innerH  ← exact partition, no overflow possible
+    textH = innerH * textFrac
+    phoneH = Math.max(0, innerH - textH - blockGap)
     phoneW = phoneH * ratio
+    if (phoneW > innerW && phoneH > 0) {
+      const s = innerW / phoneW
+      phoneW = innerW
+      phoneH *= s
+    }
   }
 
   // --- Frame layers ---
@@ -134,8 +152,17 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
   const btnW = Math.max(2, phoneW * 0.0085)
 
   // --- Typography ---
-  const fontTitle = cardWidth * 0.083
-  const fontSub   = cardWidth * 0.054
+  // For landscape tablets the text area (textH) is much shorter than a portrait card,
+  // so scale fonts to textH rather than cardWidth to prevent overflow into the frame.
+  const fontTitle = (!fullBleed && isAndroidTablet)
+    ? Math.max(8, Math.round(textH * 0.38))
+    : cardWidth * 0.083
+  const fontSub = (!fullBleed && isAndroidTablet)
+    ? Math.max(6, Math.round(textH * 0.24))
+    : cardWidth * 0.054
+  const textInternalGap = (!fullBleed && isAndroidTablet)
+    ? Math.max(1, Math.round(textH * 0.04))
+    : cardWidth * 0.018
   const isTop         = template.textPosition === 'top'
   const showSubtitle  = screenshot.showSubtitle !== false
 
@@ -143,13 +170,16 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
     <div
       style={{
         height: textH,
+        flexShrink: 0,
+        boxSizing: 'border-box',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         textAlign: 'center',
         padding: `0 ${cardWidth * 0.07}px`,
-        gap: cardWidth * 0.018,
+        gap: textInternalGap,
       }}
     >
       <div
@@ -230,7 +260,7 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
           padding: bevel,
           borderRadius: outerR + bevel,
           background: frameRailBg,
-          boxShadow: AMBIENT_SHADOW,
+          boxShadow: isAndroidTablet ? TABLET_AMBIENT_SHADOW : AMBIENT_SHADOW,
           boxSizing: 'border-box',
         }}
       >
@@ -477,7 +507,7 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
         alignItems: fullBleed ? 'stretch' : 'center',
         justifyContent: fullBleed ? 'center' : isTop ? 'flex-start' : 'flex-end',
         padding: `${pad}px`,
-        gap: 0,
+        gap: fullBleed ? 0 : blockGap,
         overflow: 'hidden',
         boxSizing: 'border-box',
       }}
