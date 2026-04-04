@@ -105,7 +105,7 @@ export default function Header({
 
   return (
     <header
-      className="flex flex-wrap items-center px-5 gap-x-4 gap-y-2 shrink-0 min-h-[60px] py-2.5"
+      className="sticky top-0 z-40 flex flex-wrap items-center px-3 sm:px-5 gap-x-3 sm:gap-x-4 gap-y-2 shrink-0 min-h-[56px] sm:min-h-[60px] py-2 sm:py-2.5"
       style={{
         background: '#111118',
         borderBottom: '1px solid #1a1a25',
@@ -150,7 +150,7 @@ export default function Header({
       </div>
 
       {/* Device presets: iOS and Android in separate groups (store tabs show one platform only) */}
-      <div className="flex items-center gap-3 ml-1 flex-wrap min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 ml-0 sm:ml-1 flex-nowrap overflow-x-auto min-w-0 max-w-full pb-0.5 -mb-0.5 lg:flex-wrap lg:overflow-visible">
         {showIosDevices && renderDeviceGroup('ios', iosDeviceIds)}
         {showIosDevices && showAndroidDevices && (
           <div className="hidden sm:block h-7 w-px shrink-0" style={{ background: '#2a2a38' }} aria-hidden />

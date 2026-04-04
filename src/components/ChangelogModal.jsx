@@ -45,10 +45,8 @@ export default function ChangelogModal({ onClose }) {
       style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
     >
       <div
-        className="flex flex-col rounded-2xl overflow-hidden"
+        className="flex flex-col rounded-2xl overflow-hidden w-[min(520px,calc(100vw-24px))] max-h-[min(80dvh,80vh)] mx-4"
         style={{
-          width: 520,
-          maxHeight: '80vh',
           background: '#111118',
           border: '1px solid #1a1a25',
           boxShadow: '0 24px 80px rgba(0,0,0,0.6)',

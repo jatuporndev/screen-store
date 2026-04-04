@@ -75,7 +75,7 @@ function RatingBadge({ rating, count }) {
 function InfoBadge({ label, value }) {
   return (
     <div
-      className="flex flex-col items-center px-4 py-3 rounded-xl"
+      className="flex flex-col items-center px-4 py-3 rounded-xl shrink-0"
       style={{ background: '#1c1c1e', border: '1px solid #2c2c2e', minWidth: 80 }}
     >
       <span className="text-xs font-semibold" style={{ color: '#ebebf5', fontSize: 15 }}>
@@ -198,7 +198,10 @@ export default function AppStorePreview({ screenshots, template, deviceType, app
         </div>
 
         {/* Rating row */}
-        <div className="flex items-center gap-6 mt-5 pt-4" style={{ borderTop: '1px solid #2c2c2e' }}>
+        <div
+          className="flex items-center gap-3 sm:gap-6 mt-5 pt-4 overflow-x-auto pb-1 -mx-1 px-1"
+          style={{ borderTop: '1px solid #2c2c2e' }}
+        >
           <InfoBadge label="Rating" value={appInfo.rating?.toFixed(1) || '4.5'} />
           <InfoBadge label="Category" value={appInfo.category?.slice(0, 6) || 'Prod.'} />
           <InfoBadge label="Age" value="4+" />

@@ -7,9 +7,65 @@ import ScreenshotPreview, { PhoneCard } from './components/ScreenshotPreview'
 import AppStorePreview from './components/AppStorePreview'
 import PlayStorePreview from './components/PlayStorePreview'
 import ChangelogModal from './components/ChangelogModal'
+import EditorMobileSheet from './components/EditorMobileSheet'
 import { PRESET_TEMPLATES } from './data/templates'
 import { APP_VERSION } from './data/changelog'
-import { Sparkles, ZoomIn, ZoomOut } from 'lucide-react'
+import { Sparkles, ZoomIn, ZoomOut, Images, Palette } from 'lucide-react'
+
+function EditorScreensColumn({
+  onUpload,
+  screenshots,
+  activeScreenshotId,
+  onSelect,
+  onDelete,
+  onReorder,
+  onOpenChangelog,
+  layout = 'sidebar',
+}) {
+  const list = (
+    <ScreenshotList
+      screenshots={screenshots}
+      activeId={activeScreenshotId}
+      onSelect={onSelect}
+      onDelete={onDelete}
+      onReorder={onReorder}
+    />
+  )
+  return (
+    <>
+      <UploadZone onUpload={onUpload} />
+      {layout === 'sidebar' ? (
+        <div className="min-h-0 flex-1 overflow-y-auto">{list}</div>
+      ) : (
+        list
+      )}
+      <div
+        className="shrink-0 flex items-center gap-2 px-3 py-2.5"
+        style={{ borderTop: '1px solid #1a1a25' }}
+      >
+        <span style={{ color: '#33334a', fontSize: 11, fontWeight: 500 }}>
+          v{APP_VERSION}
+        </span>
+        <button
+          onClick={onOpenChangelog}
+          className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors"
+          style={{
+            background: 'transparent',
+            border: '1px solid #1a1a25',
+            color: '#55556a',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            lineHeight: 1,
+          }}
+        >
+          <Sparkles size={10} color="#007aff" />
+          Changelog
+        </button>
+      </div>
+    </>
+  )
+}
 
 const DEFAULT_TEMPLATE = PRESET_TEMPLATES[0]
 
@@ -37,6 +93,7 @@ export default function App() {
   const [deviceType, setDeviceType] = useState('iphone67')
   const [activeTab, setActiveTab] = useState('editor')
   const [showChangelog, setShowChangelog] = useState(false)
+  const [mobileEditorSheet, setMobileEditorSheet] = useState(null)
   const [previewZoom, setPreviewZoom] = useState(1)
   const [appInfo, setAppInfo] = useState({
     name: 'Your App Name',
@@ -105,8 +162,15 @@ export default function App() {
     })
   }, [activeTab])
 
+  useEffect(() => {
+    if (activeTab !== 'editor') setMobileEditorSheet(null)
+  }, [activeTab])
+
   return (
-    <div className="h-full flex flex-col" style={{ background: '#0a0a0f' }}>
+    <div
+      className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden lg:h-full lg:max-h-none"
+      style={{ background: '#0a0a0f' }}
+    >
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -153,52 +217,27 @@ export default function App() {
       })}
 
       {activeTab === 'editor' ? (
-        <div className="flex flex-1 overflow-hidden min-h-0">
-          {/* Left: Upload + Screenshot list + footer */}
+        <>
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden lg:flex-row">
+          {/* Left: Upload + list — desktop only */}
           <div
-            className="flex flex-col border-r shrink-0 min-h-0"
-            style={{ width: 260, borderColor: '#1a1a25', background: '#111118' }}
+            className="hidden lg:flex lg:w-[260px] lg:max-w-[260px] lg:shrink-0 flex-col min-h-0 border-r"
+            style={{ borderColor: '#1a1a25', background: '#111118' }}
           >
-            <UploadZone onUpload={handleUpload} />
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <ScreenshotList
-                screenshots={screenshots}
-                activeId={activeScreenshotId}
-                onSelect={setActiveScreenshotId}
-                onDelete={handleDeleteScreenshot}
-                onReorder={setScreenshots}
-              />
-            </div>
-            {/* Version + changelog pinned at bottom of sidebar */}
-            <div
-              className="shrink-0 flex items-center gap-2 px-3 py-2.5"
-              style={{ borderTop: '1px solid #1a1a25' }}
-            >
-              <span style={{ color: '#33334a', fontSize: 11, fontWeight: 500 }}>
-                v{APP_VERSION}
-              </span>
-              <button
-                onClick={() => setShowChangelog(true)}
-                className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors"
-                style={{
-                  background: 'transparent',
-                  border: '1px solid #1a1a25',
-                  color: '#55556a',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  lineHeight: 1,
-                }}
-              >
-                <Sparkles size={10} color="#007aff" />
-                Changelog
-              </button>
-            </div>
+            <EditorScreensColumn
+              onUpload={handleUpload}
+              screenshots={screenshots}
+              activeScreenshotId={activeScreenshotId}
+              onSelect={setActiveScreenshotId}
+              onDelete={handleDeleteScreenshot}
+              onReorder={setScreenshots}
+              onOpenChangelog={() => setShowChangelog(true)}
+            />
           </div>
 
-          {/* Center: mini strip + main preview */}
+          {/* Center: mini strip + preview + mobile bar */}
           <div
-            className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0"
+            className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
             style={{ background: '#0d0d14' }}
           >
             {/* Mini overview strip — above preview in stacking order so nothing paints over it */}
@@ -294,9 +333,17 @@ export default function App() {
                         <circle cx="12" cy="19" r="1" fill="#33334a" />
                       </svg>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center px-4">
                       <p className="font-semibold" style={{ color: '#88889a' }}>No screenshots yet</p>
                       <p className="text-sm mt-1" style={{ color: '#55556a' }}>Upload app screenshots to get started</p>
+                      <button
+                        type="button"
+                        onClick={() => setMobileEditorSheet('screens')}
+                        className="mt-4 rounded-xl px-5 py-2.5 text-sm font-semibold lg:hidden"
+                        style={{ background: '#007aff', color: '#fff', border: 'none', cursor: 'pointer' }}
+                      >
+                        Add screenshots
+                      </button>
                     </div>
                   </div>
                 )}
@@ -307,8 +354,8 @@ export default function App() {
                   className="flex items-center gap-1 rounded-lg p-0.5"
                   style={{
                     position: 'absolute',
-                    right: 16,
-                    bottom: 16,
+                    right: 'max(12px, env(safe-area-inset-right, 0px))',
+                    bottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
                     zIndex: 10,
                     background: '#1a1a25',
                     border: '1px solid #252535',
@@ -376,12 +423,52 @@ export default function App() {
                 </div>
               )}
             </div>
+
+            {/* Mobile: open screens / style as sheets */}
+            <div
+              className="flex shrink-0 lg:hidden"
+              style={{
+                borderTop: '1px solid #1a1a25',
+                background: '#111118',
+                paddingBottom: 'max(8px, env(safe-area-inset-bottom, 0px))',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setMobileEditorSheet('screens')}
+                className="flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-semibold"
+                style={{
+                  color: '#a8a8b8',
+                  background: 'transparent',
+                  border: 'none',
+                  borderRight: '1px solid #1a1a25',
+                  cursor: 'pointer',
+                }}
+              >
+                <Images size={20} strokeWidth={2} color="#88889a" />
+                Screens
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileEditorSheet('style')}
+                className="flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-semibold"
+                style={{
+                  color: '#a8a8b8',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <Palette size={20} strokeWidth={2} color="#88889a" />
+                Style
+              </button>
+            </div>
           </div>
 
-          {/* Right: Customizer Panel */}
+          {/* Right: Customizer — desktop only */}
           <div
-            className="border-l overflow-y-auto shrink-0"
-            style={{ width: 300, borderColor: '#1a1a25', background: '#111118' }}
+            className="hidden lg:block lg:w-[300px] lg:max-w-[300px] lg:shrink-0 overflow-y-auto border-l"
+            style={{ borderColor: '#1a1a25', background: '#111118' }}
           >
             <CustomizerPanel
               template={template}
@@ -393,6 +480,42 @@ export default function App() {
             />
           </div>
         </div>
+
+        <EditorMobileSheet
+          open={mobileEditorSheet === 'screens'}
+          title="Screens"
+          onClose={() => setMobileEditorSheet(null)}
+        >
+          <EditorScreensColumn
+            layout="sheet"
+            onUpload={handleUpload}
+            screenshots={screenshots}
+            activeScreenshotId={activeScreenshotId}
+            onSelect={setActiveScreenshotId}
+            onDelete={handleDeleteScreenshot}
+            onReorder={setScreenshots}
+            onOpenChangelog={() => {
+              setMobileEditorSheet(null)
+              setShowChangelog(true)
+            }}
+          />
+        </EditorMobileSheet>
+
+        <EditorMobileSheet
+          open={mobileEditorSheet === 'style'}
+          title="Style & app"
+          onClose={() => setMobileEditorSheet(null)}
+        >
+          <CustomizerPanel
+            template={template}
+            setTemplate={setTemplate}
+            activeScreenshot={activeScreenshot}
+            onUpdateScreenshot={handleUpdateScreenshot}
+            appInfo={appInfo}
+            setAppInfo={setAppInfo}
+          />
+        </EditorMobileSheet>
+        </>
       ) : activeTab === 'preview' ? (
         <div className="flex-1 overflow-auto min-h-0">
           <AppStorePreview
