@@ -12,7 +12,7 @@ export const CHANGELOG = [
       { tag: 'new', text: 'Mobile editor: Screens and Style open as bottom sheets so upload, list, and customizer stay reachable; desktop layout unchanged' },
       { tag: 'improvement', text: 'Editor shell uses dynamic viewport height (dvh) with a single scroll surface so the preview scrolls reliably on phones' },
       { tag: 'improvement', text: 'Header stays sticky on small screens; device preset groups scroll horizontally when they do not fit' },
-      { tag: 'improvement', text: 'App Store preview metadata row scrolls on narrow widths; What's New dialog width adapts to the viewport' },
+      { tag: 'improvement', text: "App Store preview metadata row scrolls on narrow widths; What's New dialog width adapts to the viewport" },
       { tag: 'fix', text: 'Empty editor on mobile: Add screenshots button opens the Screens sheet' },
     ],
   },
