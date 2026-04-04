@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Monitor, Smartphone, Tablet, Download, Eye, Pencil, Loader2, AlertTriangle, Store } from 'lucide-react'
+import { Smartphone, Tablet, Download, Eye, Pencil, Loader2, AlertTriangle, Store } from 'lucide-react'
 import { exportAllScreenshots } from '../utils/exportUtils'
 
 const DeviceButton = ({ id, label, icon: Icon, active, onClick }) => (
@@ -111,13 +111,25 @@ export default function Header({
         borderBottom: '1px solid #1a1a25',
       }}
     >
-      {/* Logo */}
+      {/* Logo — white tile; PNG is black ink on white */}
       <div className="flex items-center gap-2 mr-2 shrink-0">
         <div
-          className="flex items-center justify-center rounded-lg"
-          style={{ width: 28, height: 28, background: 'linear-gradient(135deg, #007aff, #5856d6)' }}
+          className="flex items-center justify-center rounded-lg overflow-hidden shrink-0"
+          style={{
+            width: 28,
+            height: 28,
+            background: '#ffffff',
+            border: '1px solid #d8d8e4',
+          }}
         >
-          <Monitor size={14} color="#fff" />
+          <img
+            src={`${import.meta.env.BASE_URL}app_icon.png`}
+            alt=""
+            width={24}
+            height={24}
+            className="object-contain"
+            decoding="async"
+          />
         </div>
         <span className="font-bold text-sm tracking-tight" style={{ color: '#f0f0f5' }}>
           ScreenStore

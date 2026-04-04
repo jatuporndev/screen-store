@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <clipPath id="clip">
+      <rect width="512" height="512" rx="112" ry="112" />
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#ffffff" />
+  <g clip-path="url(#clip)">
+    <image
+      href="app_icon.png"
+      x="0"
+      y="0"
+      width="512"
+      height="512"
+      preserveAspectRatio="xMidYMid meet"
+    />
+  </g>
+  <rect width="512" height="512" rx="112" fill="none" stroke="#d8d8e4" stroke-width="4" />
+</svg>
