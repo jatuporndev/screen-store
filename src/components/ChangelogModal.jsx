@@ -1,38 +1,41 @@
 import { useEffect, useRef } from 'react'
-import { X, Sparkles, Wrench, Zap } from 'lucide-react'
+import { X } from 'lucide-react'
 import { CHANGELOG, APP_VERSION } from '../data/changelog'
 
 const TAG_CONFIG = {
-  new:         { label: 'New',         color: '#30d158', bg: 'rgba(48,209,88,0.12)',  Icon: Sparkles },
-  fix:         { label: 'Fix',         color: '#ff9f0a', bg: 'rgba(255,159,10,0.12)', Icon: Wrench   },
-  improvement: { label: 'Improvement', color: '#0a84ff', bg: 'rgba(10,132,255,0.12)', Icon: Zap      },
+  new: { label: 'New', color: '#34d399' },
+  fix: { label: 'Fix', color: '#e5a54b' },
+  improvement: { label: 'Improvement', color: '#6b9ef7' },
 }
 
-function TagBadge({ tag }) {
-  const cfg = TAG_CONFIG[tag] || TAG_CONFIG.new
-  const { Icon } = cfg
+function ChangelogEntry({ entry }) {
+  const cfg = TAG_CONFIG[entry.tag] || TAG_CONFIG.new
   return (
-    <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0"
-      style={{ color: cfg.color, background: cfg.bg }}
-    >
-      <Icon size={10} />
-      {cfg.label}
-    </span>
+    <li className="grid grid-cols-1 gap-x-3 gap-y-1 sm:grid-cols-[7.25rem_1fr] sm:items-start sm:gap-y-0">
+      <span
+        className="text-[11px] font-semibold uppercase tracking-wide sm:pt-[0.2rem]"
+        style={{ color: cfg.color }}
+      >
+        {cfg.label}
+      </span>
+      <p className="m-0 min-w-0 text-[13px] leading-[1.6]" style={{ color: '#9898ac' }}>
+        {entry.text}
+      </p>
+    </li>
   )
 }
 
 export default function ChangelogModal({ onClose }) {
   const overlayRef = useRef(null)
 
-  // Close on Escape
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    const handler = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
-  // Close on backdrop click
   const handleOverlayClick = (e) => {
     if (e.target === overlayRef.current) onClose()
   }
@@ -41,110 +44,98 @@ export default function ChangelogModal({ onClose }) {
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}
     >
       <div
-        className="flex flex-col rounded-2xl overflow-hidden w-[min(520px,calc(100vw-24px))] max-h-[min(80dvh,80vh)] mx-4"
+        className="flex max-h-[min(85dvh,85vh)] w-full max-w-[min(600px,calc(100vw-32px))] flex-col overflow-hidden rounded-xl"
         style={{
-          background: '#111118',
-          border: '1px solid #1a1a25',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+          background: '#12121a',
+          border: '1px solid #252532',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.45)',
         }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="changelog-title"
       >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-4 shrink-0"
-          style={{ borderBottom: '1px solid #1a1a25' }}
+        <header
+          className="flex shrink-0 items-center justify-between gap-4 px-5 py-4 sm:px-6"
+          style={{ borderBottom: '1px solid #1e1e2a' }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center rounded-lg"
-              style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #007aff, #5856d6)' }}
-            >
-              <Sparkles size={15} color="#fff" />
-            </div>
-            <div>
-              <h2 className="font-bold text-sm" style={{ color: '#f0f0f5' }}>
-                What's New
-              </h2>
-              <p className="text-xs" style={{ color: '#55556a' }}>
-                ScreenStore v{APP_VERSION}
-              </p>
-            </div>
+          <div className="min-w-0">
+            <h2 id="changelog-title" className="text-[15px] font-semibold tracking-tight" style={{ color: '#ececf2' }}>
+              What&apos;s New
+            </h2>
+            <p className="mt-0.5 text-xs" style={{ color: '#5c5c70' }}>
+              v{APP_VERSION}
+            </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="flex items-center justify-center rounded-lg transition-colors"
-            style={{ width: 28, height: 28, background: '#1a1a25', border: 'none', cursor: 'pointer', color: '#55556a' }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-white/[0.06]"
+            style={{ color: '#6a6a7e', border: 'none', background: 'transparent', cursor: 'pointer' }}
+            aria-label="Close"
           >
-            <X size={14} />
+            <X size={17} strokeWidth={2} />
           </button>
-        </div>
+        </header>
 
-        {/* Scrollable changelog body */}
-        <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#1a1a25 transparent' }}>
+        <div
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: '#2a2a38 transparent' }}
+        >
           {CHANGELOG.map((release, i) => (
-            <div
-              key={release.version}
-              className="px-6 py-5"
-              style={{ borderBottom: i < CHANGELOG.length - 1 ? '1px solid #1a1a25' : 'none' }}
-            >
-              {/* Version + date row */}
-              <div className="flex items-center gap-3 mb-4">
+            <section key={release.version} className={i > 0 ? 'mt-10' : ''}>
+              {i > 0 && <div className="mb-10 h-px" style={{ background: '#1e1e2a' }} aria-hidden />}
+              <div className="mb-5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span
-                  className="font-bold text-sm px-2.5 py-0.5 rounded-full"
-                  style={{
-                    color: i === 0 ? '#007aff' : '#55556a',
-                    background: i === 0 ? 'rgba(0,122,255,0.12)' : '#1a1a25',
-                  }}
+                  className="text-sm font-semibold tabular-nums"
+                  style={{ color: i === 0 ? '#e4e4ec' : '#7a7a8e' }}
                 >
                   v{release.version}
                 </span>
                 {i === 0 && (
-                  <span
-                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ color: '#30d158', background: 'rgba(48,209,88,0.12)' }}
-                  >
-                    Latest
+                  <span className="text-[11px] font-medium" style={{ color: '#5a8a6a' }}>
+                    latest
                   </span>
                 )}
-                <span className="text-xs ml-auto" style={{ color: '#33334a' }}>
+                <span className="text-[11px] tabular-nums" style={{ color: '#4a4a5c' }}>
                   {release.date}
                 </span>
               </div>
 
-              {/* Entries */}
-              <ul className="flex flex-col gap-2.5">
+              <ul className="m-0 flex list-none flex-col gap-4 p-0">
                 {release.entries.map((entry, j) => (
-                  <li key={j} className="flex items-start gap-3">
-                    <TagBadge tag={entry.tag} />
-                    <span className="text-sm leading-relaxed" style={{ color: '#88889a' }}>
-                      {entry.text}
-                    </span>
-                  </li>
+                  <ChangelogEntry key={j} entry={entry} />
                 ))}
               </ul>
-            </div>
+            </section>
           ))}
         </div>
 
-        {/* Footer */}
-        <div
-          className="px-6 py-3 shrink-0 flex items-center justify-between"
-          style={{ borderTop: '1px solid #1a1a25', background: '#0a0a10' }}
+        <footer
+          className="flex shrink-0 items-center justify-between gap-4 px-5 py-3 sm:px-6"
+          style={{ borderTop: '1px solid #1e1e2a' }}
         >
-          <span className="text-xs" style={{ color: '#33334a' }}>
+          <span className="text-[11px]" style={{ color: '#4a4a5c' }}>
             {CHANGELOG.length} release{CHANGELOG.length !== 1 ? 's' : ''}
           </span>
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-            style={{ background: '#1a1a25', color: '#88889a', border: 'none', cursor: 'pointer' }}
+            className="text-[11px] font-medium transition-colors hover:text-[#b8b8c8]"
+            style={{
+              color: '#8c8c9e',
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              padding: '4px 0',
+            }}
           >
             Close
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   )
