@@ -98,15 +98,32 @@ function ColorRow({ label, value, onChange }) {
         </span>
         <label
           className="cursor-pointer rounded-md overflow-hidden shrink-0"
-          style={{ width: 30, height: 22, border: '1px solid #252535', display: 'block' }}
+          style={{
+            position: 'relative',
+            width: 30,
+            height: 22,
+            border: '1px solid #252535',
+            display: 'block',
+          }}
         >
+          <div style={{ width: '100%', height: '100%', background: value }} aria-hidden />
           <input
             type="color"
             value={toHex(value)}
             onChange={(e) => onChange(e.target.value)}
-            className="opacity-0 w-0 h-0 absolute"
+            aria-label={`${label} color`}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              opacity: 0,
+              cursor: 'pointer',
+              border: 'none',
+              padding: 0,
+              margin: 0,
+            }}
           />
-          <div style={{ width: '100%', height: '100%', background: value }} />
         </label>
       </div>
     </div>
@@ -228,24 +245,43 @@ function PickerSwatch({ value, onChange, label }) {
   const displayHex =
     typeof value === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(value.trim()) ? toHex(value) : inputHex
   return (
-    <div className="flex items-center gap-2 flex-1 min-w-0">
+    <div className="flex w-full min-w-0 items-center gap-2">
       <span className="text-xs shrink-0 w-12 font-medium" style={{ color: '#55556a' }}>
         {label}
       </span>
       <label
         className="cursor-pointer rounded-lg overflow-hidden shrink-0"
-        style={{ width: 36, height: 28, border: '1px solid #252535', display: 'block' }}
+        style={{
+          position: 'relative',
+          width: 36,
+          height: 28,
+          border: '1px solid #252535',
+          display: 'block',
+        }}
       >
+        <div style={{ width: '100%', height: '100%', background: value || inputHex }} aria-hidden />
         <input
           type="color"
           value={inputHex}
           onChange={(e) => onChange(e.target.value)}
-          className="opacity-0 w-0 h-0 absolute"
           aria-label={label}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            opacity: 0,
+            cursor: 'pointer',
+            border: 'none',
+            padding: 0,
+            margin: 0,
+          }}
         />
-        <div style={{ width: '100%', height: '100%', background: value || inputHex }} />
       </label>
-      <span className="text-[10px] font-mono truncate min-w-0" style={{ color: '#33334a' }}>
+      <span
+        className="text-[10px] font-mono tabular-nums shrink-0 whitespace-nowrap"
+        style={{ color: '#6e6e80' }}
+      >
         {displayHex}
       </span>
     </div>
@@ -321,24 +357,34 @@ export default function CustomizerPanel({
     <div className="flex flex-col h-full">
       {/* Tab bar */}
       <div
-        className="flex shrink-0 px-2 pt-3 pb-0 gap-0.5"
+        className="flex shrink-0 gap-0.5 px-2 pb-0 pt-3"
         style={{ borderBottom: '1px solid #1a1a25' }}
+        role="tablist"
+        aria-label="Customizer sections"
       >
-        {tabs.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveSection(id)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-t-lg text-xs font-medium transition-all"
-            style={{
-              background: activeSection === id ? '#1a1a25' : 'transparent',
-              color: activeSection === id ? '#f0f0f5' : '#55556a',
-              borderBottom: activeSection === id ? '2px solid #007aff' : '2px solid transparent',
-            }}
-          >
-            <Icon size={12} />
-            {label}
-          </button>
-        ))}
+        {tabs.map(({ id, label, Icon }) => {
+          const on = activeSection === id
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              onClick={() => setActiveSection(id)}
+              className={`flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs font-medium transition-[background,color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007aff]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111118] ${
+                on
+                  ? 'bg-[#1a1a25] text-[#f0f0f5]'
+                  : 'bg-transparent text-[#6a6a7e] hover:bg-white/[0.04] hover:text-[#a0a0b4]'
+              }`}
+              style={{
+                borderBottom: on ? '2px solid #007aff' : '2px solid transparent',
+              }}
+            >
+              <Icon size={12} className={on ? 'text-[#6eb3ff]' : 'opacity-80'} />
+              {label}
+            </button>
+          )
+        })}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -648,7 +694,8 @@ export default function CustomizerPanel({
 
                       {bgMode === 'gradient' && (
                         <div className="flex flex-col gap-3">
-                          <div className="flex flex-col sm:flex-row gap-2">
+                          {/* Full-width rows: side-by-side pickers squeeze the 300px sidebar and truncate hex */}
+                          <div className="flex flex-col gap-2">
                             <PickerSwatch
                               label="Start"
                               value={gradC1}
