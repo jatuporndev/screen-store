@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
-import { Smartphone, Tablet, Download, Eye, Pencil, Loader2, AlertTriangle, Store } from 'lucide-react'
-import { exportAllScreenshots } from '../utils/exportUtils'
+import {
+  Smartphone,
+  Tablet,
+  Download,
+  Eye,
+  Pencil,
+  Loader2,
+  AlertTriangle,
+  Store,
+  ImageIcon,
+} from 'lucide-react'
+import { exportAllScreenshots, exportFeatureGraphic } from '../utils/exportUtils'
 
 const DeviceButton = ({ id, label, icon: Icon, active, onClick }) => (
   <button
@@ -50,6 +60,10 @@ export default function Header({
   }, [showStorageInfo])
 
   const handleExportAll = async () => {
+    if (activeTab === 'feature-graphic') {
+      await exportFeatureGraphic(setExportStatus)
+      return
+    }
     if (screenshots.length === 0) return
     const playOpts =
       activeTab === 'play-preview'
@@ -69,6 +83,8 @@ export default function Header({
 
   const showIosDevices = activeTab === 'editor' || activeTab === 'preview'
   const showAndroidDevices = activeTab === 'editor' || activeTab === 'play-preview'
+  const exportDisabled =
+    activeTab === 'feature-graphic' ? !!exportStatus : screenshots.length === 0 || !!exportStatus
 
   const renderDeviceGroup = (platform, ids) => {
     const ls = PLATFORM_LABEL_STYLES[platform]
@@ -114,10 +130,10 @@ export default function Header({
       {/* Logo — white tile; PNG is black ink on white */}
       <div className="flex items-center gap-2 mr-2 shrink-0">
         <div
-          className="flex items-center justify-center rounded-lg overflow-hidden shrink-0"
+          className="flex items-center justify-center rounded-xl overflow-hidden shrink-0"
           style={{
-            width: 28,
-            height: 28,
+            width: 40,
+            height: 40,
             background: '#ffffff',
             border: '1px solid #d8d8e4',
           }}
@@ -125,10 +141,17 @@ export default function Header({
           <img
             src={`${import.meta.env.BASE_URL}app_icon.png`}
             alt=""
-            width={24}
-            height={24}
-            className="object-contain"
+            className="block max-w-none"
             decoding="async"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              objectPosition: 'center',
+              transform: 'translateX(5px) scale(1.38)',
+              transformOrigin: 'center center',
+              filter: 'brightness(0.82)',
+            }}
           />
         </div>
         <span className="font-bold text-sm tracking-tight" style={{ color: '#f0f0f5' }}>
@@ -145,6 +168,7 @@ export default function Header({
           { id: 'editor', label: 'Editor', Icon: Pencil },
           { id: 'preview', label: 'App Store', Icon: Eye },
           { id: 'play-preview', label: 'Play Store', Icon: Store },
+          { id: 'feature-graphic', label: 'Feature graphic', Icon: ImageIcon },
         ].map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -222,12 +246,12 @@ export default function Header({
       {/* Export button */}
       <button
         onClick={handleExportAll}
-        disabled={screenshots.length === 0 || !!exportStatus}
+        disabled={exportDisabled}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all shrink-0"
         style={{
-          background: screenshots.length === 0 ? '#1a1a25' : '#007aff',
-          color: screenshots.length === 0 ? '#33334a' : '#fff',
-          cursor: screenshots.length === 0 ? 'not-allowed' : 'pointer',
+          background: exportDisabled && !exportStatus ? '#1a1a25' : '#007aff',
+          color: exportDisabled && !exportStatus ? '#33334a' : '#fff',
+          cursor: exportDisabled && !exportStatus ? 'not-allowed' : 'pointer',
           border: 'none',
         }}
       >
@@ -239,7 +263,7 @@ export default function Header({
         ) : (
           <>
             <Download size={12} />
-            Export All
+            {activeTab === 'feature-graphic' ? 'Download PNG' : 'Export All'}
           </>
         )}
       </button>

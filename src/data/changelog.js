@@ -1,10 +1,46 @@
-export const APP_VERSION = '2.2.0'
+export const APP_VERSION = '2.4.3'
 
 /**
  * Each entry: { version, date, tag, changes[] }
  * tag: 'new' | 'fix' | 'improvement'
  */
 export const CHANGELOG = [
+  {
+    version: '2.4.3',
+    date: 'Apr 4, 2026',
+    entries: [
+      { tag: 'new', text: 'Feature graphic: upload a banner-only icon (overrides App info for this PNG) with “Use app icon instead” to reset' },
+    ],
+  },
+  {
+    version: '2.4.2',
+    date: 'Apr 4, 2026',
+    entries: [
+      { tag: 'improvement', text: 'Default app icon in Style & app uses the bundled public/app_icon.png so previews and the feature graphic show a real icon before you upload your own' },
+    ],
+  },
+  {
+    version: '2.4.1',
+    date: 'Apr 4, 2026',
+    entries: [
+      { tag: 'improvement', text: 'Feature graphic: headline defaults to App name; “App icon on banner” defaults off until you upload an app icon, then turns on automatically the first time' },
+    ],
+  },
+  {
+    version: '2.4.0',
+    date: 'Apr 4, 2026',
+    entries: [
+      { tag: 'new', text: 'Feature graphic tab: Google Play 1024×500 banner editor with templates, headline & tagline, optional app icon from Style & app, and Download PNG export' },
+    ],
+  },
+  {
+    version: '2.3.0',
+    date: 'Apr 4, 2026',
+    entries: [
+      { tag: 'new', text: 'Text tab: soft copy limits for screenshot title (40) and subtitle (110) with live counts; over-limit shows a truncation hint — typing is never blocked' },
+      { tag: 'improvement', text: 'Short intro under Text explains why concise lines work better on device mockups' },
+    ],
+  },
   {
     version: '2.2.0',
     date: 'Apr 4, 2026',

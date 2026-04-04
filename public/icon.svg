@@ -3,17 +3,25 @@
     <clipPath id="clip">
       <rect width="512" height="512" rx="112" ry="112" />
     </clipPath>
+    <filter id="dim" color-interpolation-filters="sRGB">
+      <feColorMatrix
+        type="matrix"
+        values="0.82 0 0 0 0  0 0.82 0 0 0  0 0 0.82 0 0  0 0 0 1 0"
+      />
+    </filter>
   </defs>
   <rect width="512" height="512" rx="112" fill="#ffffff" />
-  <g clip-path="url(#clip)">
-    <image
-      href="app_icon.png"
-      x="0"
-      y="0"
-      width="512"
-      height="512"
-      preserveAspectRatio="xMidYMid meet"
-    />
+  <g clip-path="url(#clip)" filter="url(#dim)">
+    <g transform="translate(64 0) translate(256 256) scale(1.38) translate(-256 -256)">
+      <image
+        href="app_icon.png"
+        x="0"
+        y="0"
+        width="512"
+        height="512"
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </g>
   </g>
   <rect width="512" height="512" rx="112" fill="none" stroke="#d8d8e4" stroke-width="4" />
 </svg>

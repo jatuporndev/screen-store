@@ -1,6 +1,7 @@
 import { toPng } from 'html-to-image'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
+import { FEATURE_GRAPHIC_H, FEATURE_GRAPHIC_W } from '../data/featureGraphic'
 
 const DEVICE_EXPORT = {
   iphone67: { exportW: 1290, exportH: 2796 },
@@ -9,6 +10,52 @@ const DEVICE_EXPORT = {
   android20_9: { exportW: 1080, exportH: 2400 },
   android16_9: { exportW: 1080, exportH: 1920 },
   androidTablet: { exportW: 1920, exportH: 1200 },
+}
+
+/**
+ * Capture a DOM node at exportW × exportH px using a 1/3 CSS size and pixelRatio 3.
+ * Clone is mounted on-screen so html-to-image can render (see captureElement).
+ */
+async function captureFixedSize(element, exportW, exportH) {
+  const cssW = exportW / 3
+  const cssH = exportH / 3
+
+  await document.fonts.ready
+
+  const clone = element.cloneNode(true)
+  Object.assign(clone.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: `${cssW}px`,
+    height: `${cssH}px`,
+    visibility: 'visible',
+    zIndex: '-9999',
+    pointerEvents: 'none',
+  })
+  document.body.appendChild(clone)
+
+  await Promise.all(
+    [...clone.querySelectorAll('img')].map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise((res) => {
+            img.onload = res
+            img.onerror = res
+          }),
+    ),
+  )
+
+  try {
+    return await toPng(clone, {
+      width: cssW,
+      height: cssH,
+      pixelRatio: 3,
+      skipAutoScale: true,
+    })
+  } finally {
+    document.body.removeChild(clone)
+  }
 }
 
 /**
@@ -23,46 +70,7 @@ const DEVICE_EXPORT = {
  */
 async function captureElement(element, deviceType) {
   const { exportW, exportH } = DEVICE_EXPORT[deviceType] || DEVICE_EXPORT.iphone67
-  const cssW = exportW / 3
-  const cssH = exportH / 3
-
-  await document.fonts.ready
-
-  // Clone and mount on-screen so the browser lays it out and renders images
-  const clone = element.cloneNode(true)
-  Object.assign(clone.style, {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: `${cssW}px`,
-    height: `${cssH}px`,
-    visibility: 'visible',
-    zIndex: '-9999',
-    pointerEvents: 'none',
-  })
-  document.body.appendChild(clone)
-
-  // Wait for any images in the clone to finish loading (data URLs are instant
-  // but the clone img elements still go through the decode pipeline)
-  await Promise.all(
-    [...clone.querySelectorAll('img')].map((img) =>
-      img.complete
-        ? Promise.resolve()
-        : new Promise((res) => { img.onload = res; img.onerror = res }),
-    ),
-  )
-
-  try {
-    const dataUrl = await toPng(clone, {
-      width: cssW,
-      height: cssH,
-      pixelRatio: 3,
-      skipAutoScale: true,
-    })
-    return dataUrl
-  } finally {
-    document.body.removeChild(clone)
-  }
+  return captureFixedSize(element, exportW, exportH)
 }
 
 /** Convert a PNG data URL to a Blob. */
@@ -113,4 +121,18 @@ export async function exportAllScreenshots(screenshots, template, deviceType, on
   const zipBlob = await zip.generateAsync({ type: 'blob' })
   saveAs(zipBlob, zipFileName)
   onProgress?.(null)
+}
+
+/** Google Play feature graphic (1024 × 500). */
+export async function exportFeatureGraphic(onProgress) {
+  const el = document.getElementById('export-feature-graphic')
+  if (!el) return
+
+  onProgress?.('Rendering…')
+  try {
+    const dataUrl = await captureFixedSize(el, FEATURE_GRAPHIC_W, FEATURE_GRAPHIC_H)
+    saveAs(dataUrlToBlob(dataUrl), 'play-feature-graphic.png')
+  } finally {
+    onProgress?.(null)
+  }
 }

@@ -2,6 +2,11 @@ import { useState } from 'react'
 import { ArrowUp, ArrowDown, Type, Palette, Info, RotateCcw } from 'lucide-react'
 import TemplateGallery from './TemplateGallery'
 import { PRESET_TEMPLATES } from '../data/templates'
+import {
+  SCREENSHOT_COPY_INTRO,
+  SCREENSHOT_SUBTITLE_SOFT_MAX,
+  SCREENSHOT_TITLE_SOFT_MAX,
+} from '../data/copyLimits'
 
 function Section({ title, children }) {
   return (
@@ -19,6 +24,25 @@ function Label({ children }) {
     <label className="text-xs font-medium mb-1.5 block" style={{ color: '#88889a' }}>
       {children}
     </label>
+  )
+}
+
+function CopyLengthFooter({ value, softMax }) {
+  const len = (value ?? '').length
+  const over = len > softMax
+  return (
+    <div className="mt-1.5 space-y-0.5">
+      <div className="flex items-center justify-between gap-2 text-[11px] font-medium tabular-nums">
+        <span style={{ color: over ? '#c9a227' : '#55556a' }}>
+          {len} / {softMax} recommended max
+        </span>
+      </div>
+      {over && (
+        <p className="text-[11px] leading-snug" style={{ color: '#c9a227' }}>
+          Long text may be clipped on narrow phones or tablet frames. Consider shortening for a cleaner store shot.
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -173,6 +197,10 @@ function inferBackgroundMode(background) {
 }
 
 const GRADIENT_ANGLES = [90, 135, 160, 180]
+
+const MOCKUP_ZOOM_MIN = 1
+const MOCKUP_ZOOM_MAX = 2.75
+const MOCKUP_ZOOM_STEP = 0.05
 
 function getBaselinePreset(effective, globalTemplate) {
   const fromEffective = effective?.id && PRESET_TEMPLATES.find((p) => p.id === effective.id)
@@ -371,6 +399,145 @@ export default function CustomizerPanel({
                 </div>
               )}
             </Section>
+
+            {activeScreenshot?.dataUrl && (
+              <Section title="Mockup image">
+                <div className="space-y-3">
+                  {activeScreenshot.mockupImageEdited === true && (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateScreenshot(activeScreenshot.id, {
+                            mockupImageEdited: false,
+                            mockupImageZoom: undefined,
+                            mockupImagePosX: undefined,
+                            mockupImagePosY: undefined,
+                          })
+                        }
+                        className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold transition-colors"
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid #252535',
+                          color: '#55556a',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <RotateCcw size={12} />
+                        Reset
+                      </button>
+                    </div>
+                  )}
+                  {(() => {
+                    const edited = activeScreenshot.mockupImageEdited === true
+                    const z = edited
+                      ? typeof activeScreenshot.mockupImageZoom === 'number'
+                        ? activeScreenshot.mockupImageZoom
+                        : 1
+                      : 1
+                    const px = edited
+                      ? typeof activeScreenshot.mockupImagePosX === 'number'
+                        ? activeScreenshot.mockupImagePosX
+                        : 50
+                      : 50
+                    const py = edited
+                      ? typeof activeScreenshot.mockupImagePosY === 'number'
+                        ? activeScreenshot.mockupImagePosY
+                        : 0
+                      : 0
+                    const rangeStyle = {
+                      width: '100%',
+                      accentColor: '#007aff',
+                      height: 6,
+                      cursor: 'pointer',
+                    }
+                    const patchFraming = (partial) => {
+                      if (activeScreenshot.mockupImageEdited === true) {
+                        onUpdateScreenshot(activeScreenshot.id, partial)
+                        return
+                      }
+                      onUpdateScreenshot(activeScreenshot.id, {
+                        mockupImageEdited: true,
+                        mockupImagePosX:
+                          typeof activeScreenshot.mockupImagePosX === 'number'
+                            ? activeScreenshot.mockupImagePosX
+                            : 50,
+                        mockupImagePosY:
+                          typeof activeScreenshot.mockupImagePosY === 'number'
+                            ? activeScreenshot.mockupImagePosY
+                            : 0,
+                        mockupImageZoom:
+                          typeof activeScreenshot.mockupImageZoom === 'number'
+                            ? activeScreenshot.mockupImageZoom
+                            : 1,
+                        ...partial,
+                      })
+                    }
+                    return (
+                      <>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium" style={{ color: '#88889a' }}>
+                              Horizontal
+                            </span>
+                            <span className="text-[11px] tabular-nums font-medium" style={{ color: '#55556a' }}>
+                              {Math.round(px)}%
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={px}
+                            onChange={(e) => patchFraming({ mockupImagePosX: Number(e.target.value) })}
+                            style={rangeStyle}
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium" style={{ color: '#88889a' }}>
+                              Vertical
+                            </span>
+                            <span className="text-[11px] tabular-nums font-medium" style={{ color: '#55556a' }}>
+                              {Math.round(py)}%
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={py}
+                            onChange={(e) => patchFraming({ mockupImagePosY: Number(e.target.value) })}
+                            style={rangeStyle}
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium" style={{ color: '#88889a' }}>
+                              Zoom
+                            </span>
+                            <span className="text-[11px] tabular-nums font-medium" style={{ color: '#55556a' }}>
+                              {Math.round(z * 100)}%
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={MOCKUP_ZOOM_MIN}
+                            max={MOCKUP_ZOOM_MAX}
+                            step={MOCKUP_ZOOM_STEP}
+                            value={z}
+                            onChange={(e) => patchFraming({ mockupImageZoom: Number(e.target.value) })}
+                            style={rangeStyle}
+                          />
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+              </Section>
+            )}
 
             <div className="px-4 py-4" style={{ borderBottom: '1px solid #1a1a25' }}>
               <div className="flex items-center justify-between gap-2 mb-3">
@@ -598,6 +765,9 @@ export default function CustomizerPanel({
           <div className="px-4 py-4">
             {activeScreenshot ? (
               <div className="flex flex-col gap-4">
+                <p className="text-[11px] leading-relaxed -mt-1" style={{ color: '#55556a' }}>
+                  {SCREENSHOT_COPY_INTRO}
+                </p>
                 <div>
                   <Label>Title</Label>
                   <TextInput
@@ -605,6 +775,7 @@ export default function CustomizerPanel({
                     onChange={(v) => onUpdateScreenshot(activeScreenshot.id, { title: v })}
                     placeholder="Feature headline"
                   />
+                  <CopyLengthFooter value={activeScreenshot.title} softMax={SCREENSHOT_TITLE_SOFT_MAX} />
                 </div>
 
                 {/* Subtitle toggle + field */}
@@ -624,12 +795,18 @@ export default function CustomizerPanel({
                     </div>
                   </div>
                   {activeScreenshot.showSubtitle !== false && (
-                    <TextInput
-                      value={activeScreenshot.subtitle}
-                      onChange={(v) => onUpdateScreenshot(activeScreenshot.id, { subtitle: v })}
-                      placeholder="Short description"
-                      multiline
-                    />
+                    <>
+                      <TextInput
+                        value={activeScreenshot.subtitle}
+                        onChange={(v) => onUpdateScreenshot(activeScreenshot.id, { subtitle: v })}
+                        placeholder="Short description"
+                        multiline
+                      />
+                      <CopyLengthFooter
+                        value={activeScreenshot.subtitle}
+                        softMax={SCREENSHOT_SUBTITLE_SOFT_MAX}
+                      />
+                    </>
                   )}
                 </div>
 

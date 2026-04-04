@@ -166,6 +166,13 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
   const isTop         = template.textPosition === 'top'
   const showSubtitle  = screenshot.showSubtitle !== false
 
+  const useCustomMockupFraming = screenshot.mockupImageEdited === true
+  const mockZoomRaw =
+    typeof screenshot.mockupImageZoom === 'number' ? screenshot.mockupImageZoom : 1
+  const mockPosX = typeof screenshot.mockupImagePosX === 'number' ? screenshot.mockupImagePosX : 50
+  const mockPosY = typeof screenshot.mockupImagePosY === 'number' ? screenshot.mockupImagePosY : 0
+  const mockZoomClamped = Math.min(2.75, Math.max(1, mockZoomRaw))
+
   const textBlock = !fullBleed ? (
     <div
       style={{
@@ -301,7 +308,19 @@ export function PhoneCard({ screenshot, template, deviceType, cardWidth }) {
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  objectPosition: 'top center',
+                  ...(useCustomMockupFraming
+                    ? {
+                        objectPosition: `${mockPosX}% ${mockPosY}%`,
+                        ...(mockZoomClamped !== 1
+                          ? {
+                              transform: `scale(${mockZoomClamped})`,
+                              transformOrigin: `${mockPosX}% ${mockPosY}%`,
+                            }
+                          : {}),
+                      }
+                    : {
+                        objectPosition: 'top center',
+                      }),
                   borderRadius: screenR,
                   display: 'block',
                   pointerEvents: 'none',

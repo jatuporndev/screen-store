@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import Header from './components/Header'
 import UploadZone from './components/UploadZone'
 import ScreenshotList from './components/ScreenshotList'
@@ -10,7 +10,10 @@ import ChangelogModal from './components/ChangelogModal'
 import EditorMobileSheet from './components/EditorMobileSheet'
 import { PRESET_TEMPLATES } from './data/templates'
 import { APP_VERSION } from './data/changelog'
-import { Sparkles, ZoomIn, ZoomOut, Images, Palette } from 'lucide-react'
+import { Sparkles, ZoomIn, ZoomOut, Images, Palette, SlidersHorizontal } from 'lucide-react'
+import FeatureGraphicCard from './components/FeatureGraphicCard'
+import FeatureGraphicPanel from './components/FeatureGraphicPanel'
+import { createDefaultFeatureGraphic, FEATURE_GRAPHIC_H, FEATURE_GRAPHIC_W } from './data/featureGraphic'
 
 function EditorScreensColumn({
   onUpload,
@@ -86,6 +89,22 @@ const DEVICE_CONFIGS = {
 const IOS_DEVICE_IDS = ['iphone67', 'iphone65', 'ipad']
 const ANDROID_DEVICE_IDS = ['android20_9', 'android16_9', 'androidTablet']
 
+/** On-screen preview width for the Play feature graphic card (export stays 1024×500). */
+const FEATURE_GRAPHIC_PREVIEW_CARD_W = 360
+
+/** Default store icon: `public/app_icon.png` (served from site root in dev/build). */
+const DEFAULT_APP_ICON_URL = `${import.meta.env.BASE_URL}app_icon.png`
+
+const DEFAULT_APP_INFO = {
+  name: 'Your App Name',
+  developer: 'Developer Name',
+  icon: DEFAULT_APP_ICON_URL,
+  category: 'Productivity',
+  rating: 4.5,
+  ratingCount: '2.1K',
+  price: 'Free',
+}
+
 export default function App() {
   const [screenshots, setScreenshots] = useState([])
   const [activeScreenshotId, setActiveScreenshotId] = useState(null)
@@ -95,15 +114,10 @@ export default function App() {
   const [showChangelog, setShowChangelog] = useState(false)
   const [mobileEditorSheet, setMobileEditorSheet] = useState(null)
   const [previewZoom, setPreviewZoom] = useState(1)
-  const [appInfo, setAppInfo] = useState({
-    name: 'Your App Name',
-    developer: 'Developer Name',
-    icon: null,
-    category: 'Productivity',
-    rating: 4.5,
-    ratingCount: '2.1K',
-    price: 'Free',
-  })
+  const [appInfo, setAppInfo] = useState(DEFAULT_APP_INFO)
+  const [featureGraphic, setFeatureGraphic] = useState(() => createDefaultFeatureGraphic(DEFAULT_APP_INFO))
+  const [featureGraphicSheetOpen, setFeatureGraphicSheetOpen] = useState(false)
+  const hadAppIconRef = useRef(Boolean(DEFAULT_APP_INFO.icon))
 
   const handleUpload = useCallback((files) => {
     const readers = files.map(
@@ -166,6 +180,18 @@ export default function App() {
     if (activeTab !== 'editor') setMobileEditorSheet(null)
   }, [activeTab])
 
+  useEffect(() => {
+    if (activeTab !== 'feature-graphic') setFeatureGraphicSheetOpen(false)
+  }, [activeTab])
+
+  /** First time an app icon is set, turn on “App icon on banner” so the graphic matches App info. */
+  useEffect(() => {
+    if (appInfo.icon && !hadAppIconRef.current) {
+      setFeatureGraphic((fg) => ({ ...fg, useAppIcon: true }))
+    }
+    hadAppIconRef.current = Boolean(appInfo.icon)
+  }, [appInfo.icon])
+
   return (
     <div
       className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden lg:h-full lg:max-h-none"
@@ -184,6 +210,27 @@ export default function App() {
       />
 
       {/* Hidden export cards for all screenshots — used by html2canvas */}
+      <div
+        id="export-feature-graphic"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: -9999,
+          zIndex: -1,
+          width: `${FEATURE_GRAPHIC_W / 3}px`,
+          height: `${FEATURE_GRAPHIC_H / 3}px`,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          visibility: 'hidden',
+        }}
+      >
+        <FeatureGraphicCard
+          featureGraphic={featureGraphic}
+          appInfo={appInfo}
+          cardWidth={FEATURE_GRAPHIC_W / 3}
+        />
+      </div>
+
       {screenshots.map((ss) => {
         // cardWidth must equal exportW / 3 so that html2canvas at scale:3
         // produces exactly the App Store required pixel dimensions
@@ -221,7 +268,7 @@ export default function App() {
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden lg:flex-row">
           {/* Left: Upload + list — desktop only */}
           <div
-            className="hidden lg:flex lg:w-[260px] lg:max-w-[260px] lg:shrink-0 flex-col min-h-0 border-r"
+            className="hidden lg:flex lg:w-[220px] lg:max-w-[220px] lg:shrink-0 flex-col min-h-0 border-r"
             style={{ borderColor: '#1a1a25', background: '#111118' }}
           >
             <EditorScreensColumn
@@ -526,6 +573,75 @@ export default function App() {
             setAppInfo={setAppInfo}
           />
         </div>
+      ) : activeTab === 'feature-graphic' ? (
+        <>
+          <div className="flex flex-1 min-h-0 flex-col lg:flex-row overflow-hidden">
+            <div
+              className="flex flex-1 min-h-0 flex-col items-center overflow-y-auto overflow-x-hidden p-4 sm:p-8"
+              style={{ background: '#0d0d14' }}
+            >
+              <div className="text-xs font-medium tracking-widest uppercase mb-3" style={{ color: '#55556a' }}>
+                Google Play feature graphic
+              </div>
+              <div className="w-full flex flex-col items-center gap-3 shrink-0 px-1">
+                <div style={{ width: '100%', maxWidth: 480, display: 'flex', justifyContent: 'center' }}>
+                  <FeatureGraphicCard
+                    featureGraphic={featureGraphic}
+                    appInfo={appInfo}
+                    cardWidth={FEATURE_GRAPHIC_PREVIEW_CARD_W}
+                  />
+                </div>
+              </div>
+              <p className="text-xs mt-2 text-center px-2" style={{ color: '#55556a' }}>
+                {FEATURE_GRAPHIC_W} × {FEATURE_GRAPHIC_H} px · Flat banner (no device frame)
+              </p>
+            </div>
+            <div
+              className="hidden lg:block lg:w-[300px] lg:max-w-[300px] lg:shrink-0 overflow-y-auto border-l"
+              style={{ borderColor: '#1a1a25', background: '#111118' }}
+            >
+              <FeatureGraphicPanel
+                featureGraphic={featureGraphic}
+                setFeatureGraphic={setFeatureGraphic}
+                appInfo={appInfo}
+              />
+            </div>
+            <div
+              className="flex shrink-0 lg:hidden border-t"
+              style={{
+                borderColor: '#1a1a25',
+                background: '#111118',
+                paddingBottom: 'max(8px, env(safe-area-inset-bottom, 0px))',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setFeatureGraphicSheetOpen(true)}
+                className="flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-semibold"
+                style={{
+                  color: '#a8a8b8',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <SlidersHorizontal size={20} strokeWidth={2} color="#88889a" />
+                Edit banner
+              </button>
+            </div>
+          </div>
+          <EditorMobileSheet
+            open={featureGraphicSheetOpen}
+            title="Feature graphic"
+            onClose={() => setFeatureGraphicSheetOpen(false)}
+          >
+            <FeatureGraphicPanel
+              featureGraphic={featureGraphic}
+              setFeatureGraphic={setFeatureGraphic}
+              appInfo={appInfo}
+            />
+          </EditorMobileSheet>
+        </>
       ) : (
         <div className="flex-1 overflow-auto min-h-0">
           <PlayStorePreview
